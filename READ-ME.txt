@@ -1,0 +1,36 @@
+  =>  Template Name    : HairCut - Hair Salon HTML Template
+
+  =>  Template Link    : https://htmlcodex.com/hair-salon-html-template
+
+  =>  Template License : https://htmlcodex.com/license (or read the LICENSE.txt file)
+
+  =>  Template Author  : HTML Codex
+
+  =>  Author Website   : https://htmlcodex.com
+
+  =>  About HTML Codex : HTML Codex is one of the top creators and publishers of Free HTML templates, HTML landing pages, HTML email templates and HTML snippets in the world. Read more at ( https://htmlcodex.com/about-us )
+
+  # Tecnologias
+
+## FRENT END
+- Pagina SPA, el codigo de JS solo toma el contenido HTML de tomo mi view, esto hace que ignore las cebeceras de los html y solo tome el #main-content Para ello se usan los CSS.
+-BOOTSTRAP 5
+- HTML 5
+- CSS 3
+- JS
+- OwlCarousel 
+- FontAwesome 
+- SweetAlert
+- Angular con TS 
+
+## BACK END
+- SUPABASE
+- Nest.js
+- OATH GOOGLE
+
+# INFRAESTRUCTURA
+- Dockerizacion para despliegue rapido en la nube con aws EC2
+- Arquitectura Desacoplada en la NUBE
+- Modelo Cliente-Servidor API-FIRST
+- MVC 
+

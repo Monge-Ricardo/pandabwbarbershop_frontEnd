@@ -1,268 +1,59 @@
-# AGENT.md
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-## 🧠 Contexto del Proyecto
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-Aplicación web tipo plataforma inspirada en Google Classroom, adaptada a barberías.
+## About Laravel
 
-* Los **barberos** crean una “clase” (barbershop)
-* Los **clientes** se unen mediante código
-* Los clientes pueden **reservar citas** según servicios definidos
-* Los barberos pueden mostrar **productos como catálogo (no e-commerce)**
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
----
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-## 🎯 Objetivo del Agente
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-El agente debe:
+## Learning Laravel
 
-* Mantener consistencia en la base de datos
-* Evitar abuso de roles
-* Validar integridad de relaciones
-* Aplicar reglas de negocio correctamente
-* Prevenir accesos no autorizados
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
 
----
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-## 👤 Roles del Sistema
+## Laravel Sponsors
 
-```txt
-CLIENT
-BARBER
-```
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-### Reglas:
+### Premium Partners
 
-* Todos los usuarios se crean como `CLIENT`
-* Un usuario se convierte en `BARBER` SOLO cuando crea una barbershop
-* No existe selección manual de rol confiable en backend
+- **[Vehikl](https://vehikl.com)**
+- **[Tighten Co.](https://tighten.co)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Redberry](https://redberry.international/laravel-development)**
+- **[Active Logic](https://activelogic.com)**
 
----
+## Contributing
 
-## 🧱 Estructura de Base de Datos
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-### users
+## Code of Conduct
 
-* id (uuid)
-* name
-* email (unique)
-* password
-* role (default: CLIENT)
-* created_at
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
----
+## Security Vulnerabilities
 
-### barbershops
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
-* id
-* name
-* location
-* description
-* schedule
-* join_code (unique)
-* owner_id (FK → users.id)
-* created_at
+## License
 
----
-
-### clients_barbershops
-
-* id
-* user_id (FK → users.id)
-* barbershop_id (FK → barbershops.id)
-* joined_at
-
-Restricción:
-
-* unique(user_id, barbershop_id)
-
----
-
-### services
-
-* id
-* name
-* description
-* price
-* duration_minutes
-* barbershop_id (FK)
-* created_at
-
----
-
-### appointments
-
-* id
-* client_id (FK → users.id)
-* barbershop_id (FK)
-* service_id (FK → services.id)
-* appointment_time
-* status (PENDING | CONFIRMED | CANCELLED)
-* created_at
-
----
-
-### products (catálogo, no ventas)
-
-* id
-* name
-* description
-* price (opcional)
-* image_url
-* barbershop_id (FK)
-* created_at
-
----
-
-## 🔐 Reglas de Negocio
-
-### 👤 Usuarios
-
-* No pueden asignarse rol manualmente
-* El rol se actualiza automáticamente en backend
-
----
-
-### ✂️ Barberos
-
-* Solo pueden existir si:
-
-  * Han creado una barbershop
-* Solo pueden:
-
-  * Editar SU barbershop
-  * Crear servicios en SU barbershop
-  * Crear productos en SU barbershop
-
----
-
-### 💇 Clientes
-
-* Solo pueden:
-
-  * Unirse a barbershops mediante `join_code`
-  * Reservar citas en barbershops donde están registrados
-
----
-
-### 🔗 Relación Cliente-Barbería
-
-* Un cliente debe estar en `clients_barbershops` para:
-
-  * ver servicios
-  * agendar citas
-
----
-
-### 📅 Citas (appointments)
-
-* Deben cumplir:
-
-  * service_id pertenece a la barbershop
-  * client pertenece a la barbershop
-* No se permite:
-
-  * reservar en barberías no vinculadas
-
----
-
-### ✂️ Servicios
-
-* Definen:
-
-  * precio
-  * duración
-* No se define precio directamente en la cita
-
----
-
-### 🛍️ Productos
-
-* Solo son informativos
-* No hay compras, pagos ni órdenes
-* No implementar lógica de e-commerce
-
----
-
-## 🛡️ Validaciones Obligatorias (Backend)
-
-### Ownership
-
-```js
-if (barbershop.owner_id !== user.id) return 403;
-```
-
----
-
-### Cliente pertenece a barbería
-
-```js
-if (!exists in clients_barbershops) return 403;
-```
-
----
-
-### Servicio válido
-
-```js
-if (service.barbershop_id !== barbershop.id) return 403;
-```
-
----
-
-## 🚫 Restricciones Importantes
-
-* ❌ No crear múltiples barberías por usuario (fase inicial)
-* ❌ No permitir acciones solo por rol sin validar ownership
-* ❌ No confiar en el frontend para seguridad
-* ❌ No implementar ventas (products es solo catálogo)
-
----
-
-## ⚙️ Automatizaciones Recomendadas
-
-### Crear barbershop:
-
-* generar `join_code`
-* actualizar rol a `BARBER`
-
----
-
-### Unirse a barbershop:
-
-* validar código
-* insertar en `clients_barbershops`
-
----
-
-## 📈 Escalabilidad Futura
-
-Preparar para:
-
-* múltiples barberos por barbería
-* sistema de pagos
-* ratings / reviews
-* sistema de permisos (RBAC)
-* panel ADMIN
-
----
-
-## 🧠 Filosofía del Sistema
-
-* El **rol no define todo**, las relaciones sí
-* Seguridad basada en backend
-* Modelo simple pero escalable
-* Inspirado en lógica de Google Classroom
-
----
-
-## ✅ Estado esperado del sistema
-
-El sistema debe:
-
-* prevenir abuso de roles
-* mantener integridad de datos
-* permitir reservas seguras
-* permitir gestión clara de barberías
-* ser extensible sin romper estructura
-
----
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
