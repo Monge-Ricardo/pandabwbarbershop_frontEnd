@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader } from 'lucide-react';
-import { request } from '../api/api';
+import { request, getCachedData, setCachedData } from '../api/api';
 
 interface Service {
   service_id: string;
@@ -48,30 +48,48 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
+    // 1. Intentar cargar desde la caché del navegador inmediatamente (Stale-While-Revalidate)
+    const cachedServices = getCachedData<Service[]>('services_catalog', 300000); // 5 minutos de validez
+    const cachedBarbers = getCachedData<Barber[]>('barbers_list', 300000);
+
+    if (cachedServices && cachedBarbers) {
+      setServices(cachedServices);
+      setBarbers(cachedBarbers);
+      setLoading(false);
+    }
+
     async function loadData() {
       try {
         const servicesData = await request<Service[]>('GET', '/api/customer/services');
-        setServices(servicesData || []);
+        const freshServices = servicesData || [];
+        setServices(freshServices);
+        setCachedData('services_catalog', freshServices);
       } catch (error) {
         console.error('Error loading services, using fallbacks:', error);
-        setServices([
+        const fallbackServices = [
           { service_id: '1', name: 'Corte de Cabello Premium', price: 10.00, duration_minutes: 30, description: 'Estilo clásico o moderno adaptado a tus facciones.' },
           { service_id: '2', name: 'Arreglo de Barba Tradicional', price: 7.00, duration_minutes: 20, description: 'Modelado, toalla caliente y loción hidratante.' },
           { service_id: '3', name: 'Diseño y Arreglo de Cejas', price: 4.00, duration_minutes: 15, description: 'Perfilado profesional para complementar tu mirada.' },
           { service_id: '4', name: 'Combo Panda Completo', price: 18.00, duration_minutes: 50, description: 'Corte premium + arreglo de barba + cejas de cortesía.' }
-        ]);
+        ];
+        setServices(fallbackServices);
+        setCachedData('services_catalog', fallbackServices);
       }
 
       try {
         const barbersData = await request<{ data: Barber[] }>('GET', '/api/customer/barbers');
-        setBarbers(barbersData.data || []);
+        const freshBarbers = barbersData.data || [];
+        setBarbers(freshBarbers);
+        setCachedData('barbers_list', freshBarbers);
       } catch (error) {
         console.error('Error loading barbers, using fallbacks:', error);
-        setBarbers([
+        const fallbackBarbers = [
           { id: 'b1', full_name: 'Gabriel Molina', barbershop_name: 'PANDA Black & White Central' },
           { id: 'b2', full_name: 'Alejandro Obando', barbershop_name: 'PANDA Black & White Central' },
           { id: 'b3', full_name: 'Ricardo Monge', barbershop_name: 'PANDA Black & White Central' }
-        ]);
+        ];
+        setBarbers(fallbackBarbers);
+        setCachedData('barbers_list', fallbackBarbers);
       } finally {
         setLoading(false);
       }

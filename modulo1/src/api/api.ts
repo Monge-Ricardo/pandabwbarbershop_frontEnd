@@ -55,3 +55,43 @@ export async function request<T = any>(
 
   return response.json();
 }
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+/**
+ * Obtiene datos en caché si aún son válidos (TTL por defecto 5 minutos).
+ */
+export function getCachedData<T>(key: string, ttlMs: number = 300000): T | null {
+  try {
+    const cachedStr = localStorage.getItem(`cache_${key}`);
+    if (!cachedStr) return null;
+    const entry: CacheEntry<T> = JSON.parse(cachedStr);
+    const now = Date.now();
+    if (now - entry.timestamp > ttlMs) {
+      localStorage.removeItem(`cache_${key}`);
+      return null;
+    }
+    return entry.data;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Guarda datos en la caché del navegador.
+ */
+export function setCachedData<T>(key: string, data: T): void {
+  try {
+    const entry: CacheEntry<T> = {
+      data,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(`cache_${key}`, JSON.stringify(entry));
+  } catch (e) {
+    // Silencioso en caso de cupo lleno en localStorage
+  }
+}
+
