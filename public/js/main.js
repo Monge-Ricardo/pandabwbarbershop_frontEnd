@@ -336,7 +336,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 alert("Ocurrió un error inesperado al intentar conectar con Google.");
             }
         }
-        
+
         // Registro con Google
         if (event.target.closest('#btnGoogleRegister')) {
             event.preventDefault();
@@ -379,7 +379,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     headers: {
 =======
                     credentials: 'same-origin', // <--- IMPORTANTE para que el navegador guarde la cookie
-                    headers: { 
+                    headers: {
 >>>>>>> OAuth-Ricardo
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
@@ -392,11 +392,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (result.success) {
                     // Guardar sesión para que los dashboards la lean
                     sessionStorage.setItem('sharkhub_session', JSON.stringify({
-                        user_id:              result.user?.id,
-                        user_name:            result.user?.name,
-                        user_email:           result.user?.email,
-                        role:                 result.user?.role,
-                        barbershop_id:        result.user?.barbershop_id,
+                        user_id: result.user?.id,
+                        user_name: result.user?.name,
+                        user_email: result.user?.email,
+                        role: result.user?.role,
+                        barbershop_id: result.user?.barbershop_id,
                         supabase_access_token: result.access_token || result.token || null,
                     }));
                     window.location.href = result.redirect;
@@ -431,7 +431,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     headers: {
 =======
                     credentials: 'same-origin',
-                    headers: { 
+                    headers: {
 >>>>>>> OAuth-Ricardo
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
