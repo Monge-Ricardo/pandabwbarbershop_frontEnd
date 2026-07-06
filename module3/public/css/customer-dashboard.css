@@ -1,0 +1,248 @@
+/* ==========================================================================
+   SharkHub Dashboard — Client-Specific Styles
+   Booking wizard, appointment cards, selection grids
+   ========================================================================== */
+
+/* ---------- Booking Wizard ---------- */
+.wizard-container {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    padding: 3rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.wizard-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--bg-surface) 0%, var(--primary-gold) 50%, var(--bg-surface) 100%);
+}
+
+/* Wizard Step Indicators */
+.wizard-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.wizard-steps::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--border-color);
+    z-index: 1;
+    transform: translateY(-50%);
+}
+
+.step-indicator {
+    width: 40px;
+    height: 40px;
+    background: var(--bg-surface);
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    color: var(--text-muted);
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.step-indicator.active {
+    border-color: var(--primary-gold);
+    color: var(--primary-gold);
+    box-shadow: 0 0 15px var(--primary-gold-dim);
+}
+
+.step-indicator.completed {
+    background: var(--primary-gold);
+    color: #000;
+    border-color: var(--primary-gold);
+}
+
+/* Wizard Panels */
+.wizard-panel {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.wizard-panel.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.wizard-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* ---------- Selection Cards ---------- */
+.selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.selection-card {
+    background: var(--bg-base);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.selection-card:hover {
+    border-color: var(--primary-gold);
+    transform: translateY(-5px);
+}
+
+.selection-card.selected {
+    border-color: var(--primary-gold);
+    background: var(--primary-gold-dim);
+}
+
+.selection-card img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+    object-fit: cover;
+    border: 2px solid transparent;
+}
+
+.selection-card.selected img {
+    border-color: var(--primary-gold);
+}
+
+.selection-title {
+    font-family: 'Oswald', sans-serif;
+    color: var(--text-main);
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+
+.selection-subtitle {
+    color: var(--primary-gold);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* ---------- Time Slots ---------- */
+.time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.time-slot {
+    background: var(--bg-base);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.time-slot:hover:not(.disabled) {
+    border-color: var(--primary-gold);
+    color: var(--primary-gold);
+}
+
+.time-slot.selected {
+    background: var(--primary-gold);
+    color: #000;
+    border-color: var(--primary-gold);
+}
+
+.time-slot.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ---------- Booking Summary ---------- */
+.summary-box {
+    background: var(--bg-base);
+    border: 1px dashed var(--primary-gold);
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.summary-box i {
+    font-size: 3rem;
+    color: var(--primary-gold);
+    margin-bottom: 1rem;
+}
+
+/* ---------- Appointment Cards ---------- */
+.appointment-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    transition: transform 0.3s ease;
+}
+
+.appointment-card:hover {
+    transform: translateX(10px);
+    border-color: var(--primary-gold-dim);
+}
+
+.apt-date {
+    background: var(--primary-gold-dim);
+    color: var(--primary-gold);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 80px;
+}
+
+.apt-date h3 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.apt-date span {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.apt-details h4 {
+    margin-bottom: 5px;
+}
+
+.apt-details p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
