@@ -1,13 +1,13 @@
 services:
-  sharkhub-modulo1:
+  sharkhub-module3:
     build:
       context: .
       dockerfile: Dockerfile
-    image: sharkhub-modulo1:latest
-    container_name: sharkhub_modulo1_web
+    image: sharkhub-module3:latest
+    container_name: sharkhub_module3_web
     restart: unless-stopped
     ports:
       - "8000:80"
     environment:
-      - VITE_API_URL=http://localhost:3001
+      - VITE_API_URL=https://pandabarbershop.com
       - VITE_GOOGLE_CLIENT_ID=TU_GOOGLE_CLIENT_ID.apps.googleusercontent.com

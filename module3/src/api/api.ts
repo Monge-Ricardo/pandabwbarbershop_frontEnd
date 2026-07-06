@@ -1,5 +1,5 @@
 // api.ts - Cliente HTTP Compartido y Tipado para SharkHub
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const BASE_URL = import.meta.env.VITE_API_URL || "https://pandabarbershop.com";
 
 export async function request<T = any>(
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH",

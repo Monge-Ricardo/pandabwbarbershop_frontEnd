@@ -36,13 +36,13 @@ npm run dev
 Por defecto el cliente API apunta a:
 
 ```text
-http://localhost:3001
+https://pandabarbershop.com
 ```
 
 Si necesitas cambiarlo, crea un archivo `.env` con:
 
 ```text
-VITE_API_URL=http://127.0.0.1:8001
+VITE_API_URL=https://pandabarbershop.com
 ```
 
 ## Ruta principal
