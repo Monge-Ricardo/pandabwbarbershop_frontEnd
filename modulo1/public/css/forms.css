@@ -1,0 +1,282 @@
+/* ==========================================================================
+   Premium Forms CSS
+   Aesthetic: Dark, modern, bold, with sharp accents
+   ========================================================================== */
+
+/* 
+ * Form Wrapper
+ * Uses a dark linear gradient and a subtle radial glow to create depth.
+ */
+.form-wrapper {
+    background: linear-gradient(145deg, var(--secondary), var(--dark));
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    padding: 3.5rem 3rem;
+    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8);
+    position: relative;
+    overflow: hidden;
+    max-width: 480px;
+    margin: 3rem auto;
+    backdrop-filter: blur(10px);
+}
+
+/* Atmospheric glow effect */
+.form-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at top right, rgba(217, 4, 41, 0.15) 0%, transparent 60%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* 
+ * Form Header
+ */
+.form-header {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 2.5rem;
+    text-align: center;
+}
+
+.form-header h2 {
+    color: #ffffff;
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.form-header p {
+    color: var(--light);
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+}
+
+/* 
+ * Form Controls
+ */
+.form-group {
+    position: relative;
+    margin-bottom: 1.8rem;
+    z-index: 1;
+}
+
+.form-control-custom, 
+.form-control,
+input:not([type="submit"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+textarea,
+select {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(139, 146, 178, 0.15);
+    color: #ffffff;
+    padding: 1.2rem 1.25rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.form-control-custom:focus,
+.form-control:focus,
+input:not([type="submit"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+textarea:focus,
+select:focus {
+    border-color: var(--primary);
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 0 4px rgba(217, 4, 41, 0.15);
+    transform: translateY(-2px);
+}
+
+.form-control-custom::placeholder,
+.form-control::placeholder,
+input::placeholder,
+textarea::placeholder {
+    color: rgba(139, 146, 178, 0.4);
+}
+
+.form-label-custom,
+.form-label,
+label {
+    display: block;
+    color: var(--light);
+    margin-bottom: 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: color 0.3s ease;
+}
+
+/* Support for changing label color when input is focused */
+label:has(+ .form-control-custom:focus),
+label:has(+ .form-control:focus),
+label:has(+ input:focus),
+label:has(+ textarea:focus),
+label:has(+ select:focus),
+.form-label:has(+ .form-control:focus),
+.form-label-custom:has(+ .form-control-custom:focus),
+.form-control-custom:focus + .form-label-custom,
+.form-control-custom:not(:placeholder-shown) + .form-label-custom {
+    color: var(--primary);
+}
+
+/* 
+ * Submit Button
+ */
+.btn-submit-custom,
+form button[type="submit"] {
+    width: 100%;
+    background: var(--primary);
+    color: #ffffff;
+    border: none;
+    padding: 1.2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    margin-top: 1.5rem;
+    font-family: 'Oswald', sans-serif;
+}
+
+.btn-submit-custom::before,
+form button[type="submit"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    z-index: -1;
+}
+
+.btn-submit-custom:hover,
+form button[type="submit"]:hover {
+    background: #F10C35; /* Brighter accent on hover */
+    box-shadow: 0 15px 25px -10px rgba(217, 4, 41, 0.6);
+    transform: translateY(-3px);
+}
+
+.btn-submit-custom:hover::before,
+form button[type="submit"]:hover::before {
+    transform: translateX(100%);
+}
+
+.btn-submit-custom:active,
+form button[type="submit"]:active {
+    transform: translateY(0);
+    box-shadow: 0 5px 10px -5px rgba(217, 4, 41, 0.6);
+}
+
+/* 
+ * Google Auth Button
+ */
+.btn-google { 
+    background: rgba(255, 255, 255, 0.05); 
+    color: #ffffff; 
+    border: 1px solid rgba(255, 255, 255, 0.15); 
+    padding: 1.2rem; 
+    border-radius: 10px; 
+    width: 100%; 
+    font-weight: 600; 
+    font-size: 1.05rem;
+    margin-bottom: 1.5rem; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 12px;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+}
+.btn-google:hover { 
+    background: rgba(255, 255, 255, 1); 
+    color: #000000;
+    border-color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(255, 255, 255, 0.2);
+}
+
+/* 
+ * Form Footer Links
+ */
+.form-footer {
+    position: relative;
+    z-index: 1;
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--light);
+}
+
+.form-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.form-footer a::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    transform: scaleX(0);
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: var(--primary);
+    transform-origin: bottom right;
+    transition: transform 0.3s ease-out;
+}
+
+.form-footer a:hover {
+    color: #ffffff;
+}
+
+.form-footer a:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
+/* 
+ * Micro-animations for staggered entry
+ */
+@keyframes slideUpFade {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-animated-element {
+    animation: slideUpFade 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    opacity: 0;
+}
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }

@@ -1,0 +1,444 @@
+/* ==========================================================================
+   SharkHub Dashboard — Shared Styles
+   Used by: client, barber, owner dashboards
+   ========================================================================== */
+
+/* ---------- Design Tokens ---------- */
+:root {
+    --bg-base: #050505;
+    --bg-surface: #101010;
+    --bg-surface-hover: #1a1a1a;
+    --primary-gold: #D4AF37;
+    --primary-gold-dim: rgba(212, 175, 55, 0.15);
+    --text-main: #F0F0F0;
+    --text-muted: #F0F0F0;
+    --border-color: #222222;
+    --accent-red: #8B0000;
+    --accent-green: #2e7d32;
+}
+
+/* ---------- Base ---------- */
+body {
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    font-family: 'Roboto', sans-serif;
+    overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6,
+.brand-text,
+.wizard-step-title {
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    background-color: var(--bg-surface);
+    border-right: 1px solid var(--border-color);
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+}
+
+.brand-text {
+    color: var(--primary-gold);
+    font-size: 1.5rem;
+    margin-bottom: 3rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    letter-spacing: 2px;
+}
+
+.sidebar .nav-link {
+    color: var(--text-muted);
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 1.05rem;
+    text-decoration: none;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    color: var(--primary-gold);
+    background-color: var(--primary-gold-dim);
+    transform: translateX(5px);
+}
+
+.sidebar .nav-link i {
+    font-size: 1.2rem;
+}
+
+.logout-mt {
+    margin-top: auto;
+}
+
+/* Mobile sidebar toggle */
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1100;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    color: var(--primary-gold);
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+    background: var(--primary-gold-dim);
+}
+
+/* ---------- Main Content ---------- */
+.main-content {
+    margin-left: 260px;
+    padding: 2rem 3rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.page-header h2 {
+    color: var(--primary-gold);
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-gold);
+    object-fit: cover;
+}
+
+/* ---------- Content Sections (Tab panels) ---------- */
+.content-section {
+    display: none;
+    animation: slideUp 0.5s ease forwards;
+}
+
+.content-section.active {
+    display: block;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.section-title {
+    color: var(--primary-gold);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ---------- Stat Cards ---------- */
+.stat-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    border-color: var(--primary-gold);
+}
+
+.stat-info h3 {
+    font-size: 2.5rem;
+    color: var(--primary-gold);
+    margin: 0;
+}
+
+.stat-info p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--primary-gold-dim);
+    color: var(--primary-gold);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+/* ---------- Dark Panel (used in barber/owner sections) ---------- */
+.panel-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* ---------- Forms & Inputs ---------- */
+.dashboard-form .form-control,
+.dashboard-form .form-select {
+    background-color: var(--bg-base);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 12px 15px;
+}
+
+.dashboard-form .form-control:focus,
+.dashboard-form .form-select:focus {
+    background-color: var(--bg-base);
+    border-color: var(--primary-gold);
+    color: var(--text-main);
+    box-shadow: 0 0 0 0.25rem var(--primary-gold-dim);
+}
+
+.dashboard-form .form-label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* ---------- Tables ---------- */
+.table-dashboard {
+    color: var(--text-main) !important;
+    margin-top: 1rem;
+    border-color: var(--border-color);
+}
+
+.table-dashboard th {
+    border-bottom: 1px solid var(--border-color);
+    color: var(--primary-gold) !important; /* Brighter gold for headers */
+    font-family: 'Oswald', sans-serif;
+    font-weight: 400;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background-color: transparent !important;
+}
+
+.table-dashboard td {
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    background-color: transparent !important;
+    color: var(--text-main) !important;
+}
+
+.table-dashboard.table-hover tbody tr {
+    transition: background 0.3s ease;
+}
+
+.table-dashboard.table-hover tbody tr:hover {
+    background-color: var(--bg-surface-hover);
+}
+
+/* ---------- Status Badges ---------- */
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-confirmed { background: rgba(40, 167, 69, 0.2); color: #4ade80; }
+.status-pending   { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+.status-cancelled { background: rgba(220, 53, 69, 0.2); color: #ff6b6b; }
+
+/* ---------- Action Buttons ---------- */
+.action-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    transition: color 0.3s;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.action-btn:hover         { color: var(--primary-gold); }
+.action-btn.delete:hover  { color: var(--accent-red); }
+.action-btn.accept:hover  { color: var(--accent-green); }
+
+/* ---------- Buttons ---------- */
+.btn-gold {
+    background-color: var(--primary-gold);
+    color: #000;
+    border: none;
+    font-weight: 600;
+    padding: 10px 25px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Oswald', sans-serif;
+    border-radius: 6px;
+}
+
+.btn-gold:hover {
+    background-color: #e6c245;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+    transform: translateY(-2px);
+    color: #000;
+}
+
+.btn-outline-gold {
+    background-color: transparent;
+    color: var(--primary-gold);
+    border: 1px solid var(--primary-gold);
+    font-weight: 600;
+    padding: 10px 25px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    border-radius: 6px;
+}
+
+.btn-outline-gold:hover {
+    background-color: var(--primary-gold);
+    color: #000;
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    padding: 10px 25px;
+    font-weight: 500;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+.btn-outline:hover {
+    color: var(--text-main);
+    border-color: var(--text-main);
+}
+
+.btn-outline-danger {
+    background-color: transparent;
+    color: var(--accent-red);
+    border: 1px solid var(--accent-red);
+    font-weight: 600;
+    padding: 10px 25px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    border-radius: 6px;
+}
+
+.btn-outline-danger:hover {
+    background-color: var(--accent-red);
+    color: #fff;
+}
+
+.section-actions {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-actions .btn {
+    min-width: 220px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 991px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebar-toggle {
+        display: flex;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 2rem 1.5rem;
+        padding-top: 4rem;
+    }
+
+    .section-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .section-actions .btn {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* ---------- Premium UI Extensions ---------- */
+.avatar-sm { 
+    width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--primary-gold); 
+    object-fit: cover;
+}
+
+.badge-role { 
+    background: var(--primary-gold-dim); color: var(--primary-gold); 
+    border: 1px solid var(--primary-gold); padding: 2px 8px; border-radius: 4px; 
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; 
+}
+
+.btn-action { 
+    background: transparent; border: 1px solid rgba(255,255,255,.1); color: #fff; 
+    width: 32px; height: 32px; border-radius: 6px; display: flex; 
+    align-items: center; justify-content: center; transition: all .3s; 
+}
+
+.btn-action:hover { border-color: var(--primary-gold); color: var(--primary-gold); background: var(--primary-gold-dim); }
+.btn-action.delete:hover { border-color: var(--accent-red); color: var(--accent-red); background: rgba(139, 0, 0, 0.1); }
+
+.dashboard-action-btn { 
+    font-family: 'Oswald', sans-serif !important; letter-spacing: 1px; 
+    text-transform: uppercase; font-size: 0.8rem; padding: 8px 16px; 
+}
