@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
+
+:root {
+  /* Colors */
+  --primary-gold: #d4af37;
+  --primary-gold-rgb: 212, 175, 55;
+  --dark-gold: #b38f1d;
+  --dark-gold-rgb: 179, 143, 29;
+  --bg-obsidian: #080808;
+  --bg-charcoal: #141414;
+  --bg-card: #1c1c1c;
+  --border-color: #2b2b2b;
+  --text-white: #ffffff;
+  --text-muted: #aaaaaa;
+  --danger: #ff4d4d;
+  --success: #2ecc71;
+  --warning: #f1c40f;
+  
+  /* Fonts */
+  --font-heading: 'Oswald', sans-serif;
+  --font-body: 'Roboto', sans-serif;
+  
+  /* Transitions */
+  --transition-speed: 0.3s;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-obsidian);
+  color: var(--text-white);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: all var(--transition-speed) ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-obsidian);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-gold);
+}
+
+/* Global utility classes */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.text-gold {
+  color: var(--primary-gold);
+}
+
+.bg-gold {
+  background-color: var(--primary-gold);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 500;
+  border-radius: 0; /* Premium sharp edges */
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background-color: var(--primary-gold);
+  color: var(--bg-obsidian);
+}
+
+.btn-primary:hover {
+  background-color: var(--dark-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--text-white);
+  border: 1px solid var(--border-color);
+}
+
+.btn-outline:hover {
+  border-color: var(--primary-gold);
+  color: var(--primary-gold);
+}
+
+.glass-panel {
+  background: rgba(20, 20, 20, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+}
+
+.glass-panel:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.form-control {
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
+  padding: 14px 18px;
+  font-size: 1rem;
+  color: var(--text-white);
+  transition: all var(--transition-speed) ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-gold);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
