@@ -19,6 +19,7 @@ interface Appointment {
 interface ResolvedAppointment extends Appointment {
   barber_name: string;
   service_name: string;
+  price: number;
 }
 
 interface UserProfile {
@@ -88,10 +89,12 @@ export default function Dashboard() {
       const resolvedList: ResolvedAppointment[] = await Promise.all(
         rawApps.map(async (app) => {
           let service_name = 'Servicio';
+          let price = 0;
           try {
             const services = await request<any[]>('GET', `/appointments/${app.appointment_id}/services`);
             if (services && services.length > 0) {
               service_name = services[0].name || services[0].service?.name || 'Servicio';
+              price = Number(services[0].price || services[0].service?.price || 0);
             }
           } catch (e) {
             console.error(`Failed to load services for appointment ${app.appointment_id}:`, e);
@@ -99,7 +102,8 @@ export default function Dashboard() {
           return {
             ...app,
             barber_name: barbersMap.get(app.barber_id) || 'Barbero',
-            service_name
+            service_name,
+            price
           };
         })
       );
@@ -191,6 +195,25 @@ export default function Dashboard() {
 
   const avatarUrl = userProfile?.avatar_url || 
     `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile?.full_name || 'Cliente')}&background=222&color=D4AF37&size=100`;
+
+  // --- PROGRAMACIÓN FUNCIONAL & EXPRESIONES LAMBDA (Estadísticas en tiempo real) ---
+  const activeAppointmentsCount = appointments
+    .filter(app => app.status !== 'cancelled').length;
+
+  const totalInvestment = appointments
+    .filter(app => app.status === 'confirmed')
+    .map(app => app.price || 0)
+    .reduce((acc, price) => acc + price, 0);
+
+  const barberCounts = appointments
+    .filter(app => app.status !== 'cancelled')
+    .reduce((acc, app) => {
+      acc[app.barber_name] = (acc[app.barber_name] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+  const favoriteBarber = Object.entries(barberCounts)
+    .reduce((max, current) => current[1] > max[1] ? current : max, ['', 0])[0] || 'Ninguno';
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-main)' }}>
@@ -286,6 +309,30 @@ export default function Dashboard() {
               >
                 <RefreshCw size={14} className={loadingAppointments ? 'animate-spin' : ''} />
               </button>
+            </div>
+
+            {/* Tarjetas de Estadísticas Funcionales */}
+            <div className="row g-3 mb-4">
+              <div className="col-12 col-md-4">
+                <div className="bg-secondary p-4 rounded text-start" style={{ borderLeft: '4px solid var(--primary-gold)' }}>
+                  <h6 className="text-muted text-uppercase mb-1" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Citas Activas</h6>
+                  <h3 className="text-white mb-0 font-heading" style={{ fontSize: '1.75rem' }}>{activeAppointmentsCount}</h3>
+                </div>
+              </div>
+              <div className="col-12 col-md-4">
+                <div className="bg-secondary p-4 rounded text-start" style={{ borderLeft: '4px solid var(--primary-gold)' }}>
+                  <h6 className="text-muted text-uppercase mb-1" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Inversión Total</h6>
+                  <h3 className="text-white mb-0 font-heading" style={{ fontSize: '1.75rem' }}>${totalInvestment.toFixed(2)}</h3>
+                </div>
+              </div>
+              <div className="col-12 col-md-4">
+                <div className="bg-secondary p-4 rounded text-start" style={{ borderLeft: '4px solid var(--primary-gold)' }}>
+                  <h6 className="text-muted text-uppercase mb-1" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Barbero Favorito</h6>
+                  <h3 className="text-white mb-0 font-heading text-truncate" style={{ fontSize: '1.25rem' }} title={favoriteBarber}>
+                    {favoriteBarber}
+                  </h3>
+                </div>
+              </div>
             </div>
 
             {loadingAppointments ? (
