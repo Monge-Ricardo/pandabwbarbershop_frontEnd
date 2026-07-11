@@ -10,7 +10,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleTraditionalLogin = async (e: React.FormEvent) => {
@@ -29,20 +29,20 @@ export default function Login() {
       localStorage.setItem('user_id', res.user.id);
       localStorage.setItem('user_name', res.user.name);
       localStorage.setItem('user_email', res.user.email);
-      
+
       // Resolve user role
       const profile = await request<any>('GET', '/users/me');
-      const role = profile.role || 'customer';
+      const role = profile.role || 'barber';
       localStorage.setItem('user_role', role);
 
-      if (role === 'customer') {
-        navigate('/customer/dashboard');
-      } else if (role === 'barber') {
+      if (role === 'barber') {
         navigate('/barber/dashboard');
+      } else if (role === 'customer') {
+        navigate('/customer/dashboard');
       } else if (role === 'owner') {
         navigate('/owner/dashboard');
       } else {
-        navigate('/customer/dashboard'); // default
+        navigate('/barber/dashboard'); // default
       }
     } catch (err: any) {
       setError(err.message || 'Credenciales inválidas. Por favor intente de nuevo.');
@@ -68,10 +68,10 @@ export default function Login() {
 
       // Fetch profile to resolve role
       const profile = await request<any>('GET', '/users/me');
-      const role = profile.role || 'customer';
+      const role = profile.role || 'barber';
       localStorage.setItem('user_role', role);
 
-      navigate('/customer/dashboard');
+      navigate('/barber/dashboard');
     } catch (err: any) {
       setError(err.message || 'Error de autenticación con Google.');
     } finally {
@@ -84,14 +84,14 @@ export default function Login() {
   };
 
   return (
-    <main 
-      id="main-content" 
-      className="d-flex align-items-center justify-content-center px-3" 
+    <main
+      id="main-content"
+      className="d-flex align-items-center justify-content-center px-3"
       style={{ minHeight: '100vh', backgroundColor: '#121212', position: 'relative' }}
     >
       {/* Back button */}
-      <Link 
-        to="/" 
+      <Link
+        to="/"
         className="absolute top-8 left-8 text-text-muted hover:text-white d-flex align-items-center gap-1 font-heading text-sm text-uppercase text-decoration-none"
         style={{ position: 'absolute', top: '30px', left: '30px', color: '#aaa', transition: 'color 0.2s' }}
       >
@@ -108,11 +108,11 @@ export default function Login() {
               className="form-wrapper mx-auto w-100"
             >
               <div className="form-header text-center mb-4">
-                <img 
-                  src="/img/BarberShop_PandaBlackAndWhite.png" 
-                  alt="PANDA Logo" 
-                  className="h-16 w-auto mx-auto mb-3" 
-                  style={{ height: '64px' }} 
+                <img
+                  src="/img/BarberShop_PandaBlackAndWhite.png"
+                  alt="PANDA Logo"
+                  className="h-16 w-auto mx-auto mb-3"
+                  style={{ height: '64px' }}
                 />
                 <h2 className="text-center text-white text-uppercase font-heading mb-1" style={{ letterSpacing: '2px' }}>
                   Iniciar Sesión
@@ -143,8 +143,8 @@ export default function Login() {
 
               <div className="text-center mb-4 position-relative d-flex align-items-center justify-content-center">
                 <hr className="w-100 border-secondary m-0" />
-                <span 
-                  className="position-absolute px-3 bg-secondary text-muted text-uppercase" 
+                <span
+                  className="position-absolute px-3 bg-secondary text-muted text-uppercase"
                   style={{ fontSize: '0.75rem', letterSpacing: '1px', backgroundColor: '#1e1e1e' }}
                 >
                   o usa tu correo electrónico
