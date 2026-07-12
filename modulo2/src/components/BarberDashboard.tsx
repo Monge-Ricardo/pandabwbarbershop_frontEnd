@@ -17,7 +17,15 @@ export default function BarberDashboard() {
   }, []);
 
   const handleLogout = () => {
+    const cacheBarbersList = localStorage.getItem('cache_barbers_list');
+    const cacheServicesCatalog = localStorage.getItem('cache_services_catalog');
     localStorage.clear();
+    if (cacheBarbersList) {
+      localStorage.setItem('cache_barbers_list', cacheBarbersList);
+    }
+    if (cacheServicesCatalog) {
+      localStorage.setItem('cache_services_catalog', cacheServicesCatalog);
+    }
     window.location.href = "/login";
   };
 

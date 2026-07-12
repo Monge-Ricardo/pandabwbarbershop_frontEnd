@@ -52,9 +52,13 @@ export default function LandingPage() {
     const cachedServices = getCachedData<Service[]>('services_catalog', 300000); // 5 minutos de validez
     const cachedBarbers = getCachedData<Barber[]>('barbers_list', 300000);
 
-    if (cachedServices && cachedBarbers) {
+    if (cachedServices) {
       setServices(cachedServices);
+    }
+    if (cachedBarbers) {
       setBarbers(cachedBarbers);
+    }
+    if (cachedServices && cachedBarbers) {
       setLoading(false);
     }
 
@@ -62,34 +66,51 @@ export default function LandingPage() {
       try {
         const servicesData = await request<Service[]>('GET', '/api/customer/services');
         const freshServices = servicesData || [];
-        setServices(freshServices);
-        setCachedData('services_catalog', freshServices);
+        if (JSON.stringify(freshServices) !== JSON.stringify(cachedServices)) {
+          setServices(freshServices);
+          setCachedData('services_catalog', freshServices);
+        }
       } catch (error) {
         console.error('Error loading services, using fallbacks:', error);
-        const fallbackServices = [
-          { service_id: '1', name: 'Corte de Cabello Premium', price: 10.00, duration_minutes: 30, description: 'Estilo clásico o moderno adaptado a tus facciones.' },
-          { service_id: '2', name: 'Arreglo de Barba Tradicional', price: 7.00, duration_minutes: 20, description: 'Modelado, toalla caliente y loción hidratante.' },
-          { service_id: '3', name: 'Diseño y Arreglo de Cejas', price: 4.00, duration_minutes: 15, description: 'Perfilado profesional para complementar tu mirada.' },
-          { service_id: '4', name: 'Combo Panda Completo', price: 18.00, duration_minutes: 50, description: 'Corte premium + arreglo de barba + cejas de cortesía.' }
-        ];
-        setServices(fallbackServices);
-        setCachedData('services_catalog', fallbackServices);
+        if (!cachedServices) {
+          const fallbackServices = [
+            { service_id: '1', name: 'Corte de Cabello Premium', price: 10.00, duration_minutes: 30, description: 'Estilo clásico o moderno adaptado a tus facciones.' },
+            { service_id: '2', name: 'Arreglo de Barba Tradicional', price: 7.00, duration_minutes: 20, description: 'Modelado, toalla caliente y loción hidratante.' },
+            { service_id: '3', name: 'Diseño y Arreglo de Cejas', price: 4.00, duration_minutes: 15, description: 'Perfilado profesional para complementar tu mirada.' },
+            { service_id: '4', name: 'Combo Panda Completo', price: 18.00, duration_minutes: 50, description: 'Corte premium + arreglo de barba + cejas de cortesía.' }
+          ];
+
+          if (JSON.stringify(fallbackServices) !== JSON.stringify(cachedServices)) {
+            setServices(fallbackServices);
+            setCachedData('services_catalog', fallbackServices);
+          }
+        } else {
+          setServices(cachedServices);
+          setCachedData('services_catalog', cachedServices);
+        }
       }
 
       try {
         const barbersData = await request<{ data: Barber[] }>('GET', '/api/customer/barbers');
         const freshBarbers = barbersData.data || [];
-        setBarbers(freshBarbers);
-        setCachedData('barbers_list', freshBarbers);
+        if (JSON.stringify(freshBarbers) !== JSON.stringify(cachedBarbers)) {
+          setBarbers(freshBarbers);
+          setCachedData('barbers_list', freshBarbers);
+        }
       } catch (error) {
-        console.error('Error loading barbers, using fallbacks:', error);
-        const fallbackBarbers = [
-          { id: 'b1', full_name: 'Gabriel Molina', barbershop_name: 'PANDA Black & White Central' },
-          { id: 'b2', full_name: 'Alejandro Obando', barbershop_name: 'PANDA Black & White Central' },
-          { id: 'b3', full_name: 'Ricardo Monge', barbershop_name: 'PANDA Black & White Central' }
-        ];
-        setBarbers(fallbackBarbers);
-        setCachedData('barbers_list', fallbackBarbers);
+        console.error('Error loading barbers:', error);
+        if (!cachedBarbers) {
+          const fallbackBarbers = [
+            { id: 'b1', full_name: 'Gabriel Molina', barbershop_name: 'PANDA Black & White Central' },
+            { id: 'b2', full_name: 'Alejandro Obando', barbershop_name: 'PANDA Black & White Central' },
+            { id: 'b3', full_name: 'Ricardo Monge', barbershop_name: 'PANDA Black & White Central' }
+          ];
+          setBarbers(fallbackBarbers);
+          setCachedData('barbers_list', fallbackBarbers);
+        } else {
+          setBarbers(cachedBarbers);
+          setCachedData('barbers_list', cachedBarbers);
+        }
       } finally {
         setLoading(false);
       }
@@ -121,10 +142,10 @@ export default function LandingPage() {
       <nav className="navbar navbar-expand-lg bg-secondary navbar-dark sticky-top py-lg-0 px-lg-5">
         <a href="/" className="navbar-brand ms-4 ms-lg-0">
           <div className="d-flex align-items-center">
-            <img 
-              src="/img/BarberShop_PandaBlackAndWhite.png" 
-              alt="Logo" 
-              style={{ height: '58px', width: 'auto', marginRight: '12px' }} 
+            <img
+              src="/img/BarberShop_PandaBlackAndWhite.png"
+              alt="Logo"
+              style={{ height: '58px', width: 'auto', marginRight: '12px' }}
             />
             <h1 className="mb-0 text-primary text-uppercase fs-4 d-none d-md-block">
               Barbería PANDA Black And White
@@ -139,7 +160,7 @@ export default function LandingPage() {
           <a href="#services" className="nav-item nav-link d-none d-lg-block text-uppercase">Servicios</a>
           <a href="#team" className="nav-item nav-link d-none d-lg-block text-uppercase">Barberos</a>
           <a href="#contact" className="nav-item nav-link d-none d-lg-block text-uppercase">Contacto</a>
-          
+
           <Link to="/login" className="btn btn-primary rounded-0 py-2 px-lg-4 align-self-center">
             Agendar Cita
             <i className="fa fa-arrow-right ms-3"></i>
@@ -253,7 +274,7 @@ export default function LandingPage() {
             <p className="d-inline-block bg-secondary text-primary py-1 px-4">Servicios</p>
             <h1 className="text-uppercase text-white">Lo que ofrecemos</h1>
           </div>
-          
+
           <div className="row g-4">
             {services.map((service, index) => (
               <div key={service.service_id} className="col-lg-4 col-md-6 text-start">
@@ -282,7 +303,7 @@ export default function LandingPage() {
             <p className="d-inline-block bg-secondary text-primary py-1 px-4">Barberos</p>
             <h1 className="text-uppercase text-white">Nuestro Equipo</h1>
           </div>
-          
+
           <div className="row g-4">
             {barbers.map((barber, index) => (
               <div key={barber.id} className="col-lg-4 col-md-6">
@@ -352,7 +373,7 @@ export default function LandingPage() {
             <p className="d-inline-block bg-secondary text-primary py-1 px-4">Contacto</p>
             <h1 className="text-uppercase text-white">Ubicación y Canales</h1>
           </div>
-          
+
           <div className="row g-4 text-start">
             <div className="col-md-4">
               <div className="bg-secondary p-4 text-center h-100 d-flex flex-column align-items-center justify-content-center">

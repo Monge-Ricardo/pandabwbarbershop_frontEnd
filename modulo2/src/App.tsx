@@ -51,7 +51,7 @@ export default function App() {
         <Routes>
           {/* Public Landing Pages */}
           <Route path="/" element={<LandingPage />} />
-          
+
           {/* Info routes mapping directly to LandingPage sections (handled by React Router / Scroll or simply Landing) */}
           <Route path="/about" element={<LandingPage />} />
           <Route path="/service" element={<LandingPage />} />
@@ -61,21 +61,21 @@ export default function App() {
           <Route path="/contact" element={<LandingPage />} />
 
           {/* Auth Routes */}
-          <Route 
-            path="/login" 
+          <Route
+            path="/login"
             element={
               <PublicRoute>
                 <Login />
               </PublicRoute>
-            } 
+            }
           />
-          <Route 
-            path="/register" 
+          <Route
+            path="/register"
             element={
               <PublicRoute>
                 <Register />
               </PublicRoute>
-            } 
+            }
           />
 
           {/* Customer Dashboard Protected Route */}
@@ -114,25 +114,38 @@ export default function App() {
           />
 
           {/* Mock placeholders for teammates modules so routing doesn't break */}
-          <Route 
-            path="/barber/dashboard" 
+          <Route
+            path="/barber/dashboard"
             element={
               <ProtectedRoute>
                 <BarberDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/owner/dashboard" 
+          <Route
+            path="/owner/dashboard"
             element={
               <ProtectedRoute>
                 <div className="min-h-screen bg-obsidian flex flex-col justify-center items-center text-center p-6 border border-border-color">
                   <h1 className="text-gold text-4xl font-heading mb-4">Dashboard del Propietario</h1>
                   <p className="text-text-muted max-w-md">Este es el Módulo 3, reservado para tus compañeros. La sesión actual de Propietario funciona correctamente.</p>
-                  <button onClick={() => { localStorage.clear(); window.location.href = '/'; }} className="btn btn-outline mt-6">Cerrar Sesión</button>
+                  <button onClick={
+                    () => {
+                      const cacheBarbersList = localStorage.getItem('cache_barbers_list');
+                      const cacheServicesCatalog = localStorage.getItem('cache_services_catalog');
+                      localStorage.clear();
+                      if (cacheBarbersList) {
+                        localStorage.setItem('cache_barbers_list', cacheBarbersList);
+                      }
+                      if (cacheServicesCatalog) {
+                        localStorage.setItem('cache_services_catalog', cacheServicesCatalog);
+                      }
+                      window.location.href = '/';
+                    }}
+                    className="btn btn-outline mt-6">Cerrar Sesión</button>
                 </div>
               </ProtectedRoute>
-            } 
+            }
           />
 
           {/* Fallback Catch-All Redirect */}
