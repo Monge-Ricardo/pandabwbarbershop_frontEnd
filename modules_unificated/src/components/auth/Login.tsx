@@ -3,7 +3,23 @@ import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { motion } from 'framer-motion';
 import { Lock, Mail, ChevronLeft, AlertCircle, Loader } from 'lucide-react';
-import { cachedRequest, clearApiCache, request } from '../../api/api';
+import { clearApiCache, request } from '../../api/api';
+
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -31,9 +47,9 @@ export default function Login() {
       localStorage.setItem('user_name', res.user.name);
       localStorage.setItem('user_email', res.user.email);
       
-      // Resolve user role
-      const profile = await cachedRequest<any>('/users/me', 120000);
-      const role = profile.role || 'customer';
+      // Resolve user role from JWT token payload
+      const decoded = parseJwt(res.token);
+      const role = decoded?.role || 'customer';
       localStorage.setItem('user_role', role);
 
       if (role === 'customer') {
@@ -68,12 +84,20 @@ export default function Login() {
       localStorage.setItem('user_name', res.user.name);
       localStorage.setItem('user_email', res.user.email);
 
-      // Fetch profile to resolve role
-      const profile = await cachedRequest<any>('/users/me', 120000);
-      const role = profile.role || 'customer';
+      // Resolve user role from JWT token payload
+      const decoded = parseJwt(res.token);
+      const role = decoded?.role || 'customer';
       localStorage.setItem('user_role', role);
 
-      navigate('/customer/dashboard');
+      if (role === 'customer') {
+        navigate('/customer/dashboard');
+      } else if (role === 'barber') {
+        navigate('/barber/dashboard');
+      } else if (role === 'owner') {
+        navigate('/owner/dashboard');
+      } else {
+        navigate('/customer/dashboard');
+      }
     } catch (err: any) {
       setError(err.message || 'Error de autenticación con Google.');
     } finally {
