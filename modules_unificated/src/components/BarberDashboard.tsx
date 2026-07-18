@@ -18,8 +18,12 @@ export default function BarberDashboard() {
   }, []);
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_id');
     clearApiCache();
-    localStorage.clear();
     window.location.href = "/login";
   };
 
