@@ -3,6 +3,7 @@ import { request, cachedRequest } from "../api/api";
 
 interface Appointment {
   id: string | number;
+  appointment_id: string;
   start_time?: string;
   end_time?: string;
   notes?: string;
@@ -143,7 +144,7 @@ export default function BarberAgenda() {
               </thead>
               <tbody>
                 {appointments.map((appointment) => (
-                  <tr key={appointment.id} className="align-middle">
+                  <tr key={appointment.appointment_id} className="align-middle">
                     <td className="fw-bold" style={{ color: "#fff" }}>
                       {appointment.start_time ? appointment.start_time.substring(0, 5) : "--:--"} - {appointment.end_time ? appointment.end_time.substring(0, 5) : "--:--"}
                     </td>
@@ -171,13 +172,13 @@ export default function BarberAgenda() {
                       {appointment.status === "pending" && (
                         <div className="d-flex justify-content-end gap-2">
                           <button
-                            onClick={() => handleUpdateStatus(appointment.id, "confirmed")}
+                            onClick={() => handleUpdateStatus(appointment.appointment_id, "confirmed")}
                             className="btn btn-sm btn-success px-3"
                           >
                             <i className="fa-solid fa-check me-1"></i> Aceptar
                           </button>
                           <button
-                            onClick={() => handleUpdateStatus(appointment.id, "cancelled")}
+                            onClick={() => handleUpdateStatus(appointment.appointment_id, "cancelled")}
                             className="btn btn-sm btn-outline-danger px-3"
                           >
                             <i className="fa-solid fa-xmark me-1"></i> Rechazar
@@ -186,7 +187,7 @@ export default function BarberAgenda() {
                       )}
                       {(appointment.status === "confirmed" || appointment.status === "accepted") && (
                         <button
-                          onClick={() => handleUpdateStatus(appointment.id, "cancelled")}
+                          onClick={() => handleUpdateStatus(appointment.appointment_id, "cancelled")}
                           className="btn btn-sm btn-outline-danger"
                         >
                           <i className="fa-solid fa-ban me-1"></i> Cancelar Cita
