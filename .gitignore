@@ -1,66 +1,29 @@
-# Dependencias PHP
-/vendor
-
-# Dependencias Node / Vite
-/node_modules
-
-# Archivos de entorno
-.env
-.env.backup
-.env.production
-.env.local
-
-# Laravel
-/storage/*.key
-/storage/logs/*
-/storage/framework/cache/data/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-/bootstrap/cache/*.php
-
-# Caché y archivos generados
-.phpunit.result.cache
-/.phpunit.cache
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
-# Archivos compilados del frontend
-/public/build
-/public/hot
+node_modules
+dist
+dist-ssr
+*.local
 
-# Base de datos local
-/database/*.sqlite
-/database/*.sqlite-journal
-
-# IDE / Editor
-/.idea
-/.vscode
-*.code-workspace
-
-# Sistema operativo
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# Composer local
-/auth.json
-
-# Archivos temporales
-*.log
-*.tmp
-*.temp
-
-# Zips o respaldos generados manualmente
-*.zip
-*.rar
-*.7z
-
-# Carpetas auxiliares que no pertenecen a la entrega
-.agents/
-AGENTS.md
-SKILL.md
-skills-lock.json
-
-# Carpeta temporal usada para crear Laravel
-laravel-base/
+# Environment files
+.env
+.env.*
+!.env.example
