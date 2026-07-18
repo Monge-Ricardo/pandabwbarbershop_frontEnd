@@ -78,7 +78,7 @@ export default function Dashboard() {
     setError(null);
     try {
       // 1. Fetch raw appointments
-      const rawApps = await cachedRequest<Appointment[]>('/appointments', 60000);
+      const rawApps = await request<Appointment[]>("GET", '/appointments');
       
       // 2. Fetch master data to resolve names
       const barbersRes = await cachedRequest<{ data: any[] }>('/api/customer/barbers', 300000).catch(() => ({ data: [] }));
@@ -89,7 +89,7 @@ export default function Dashboard() {
         rawApps.map(async (app) => {
           let service_name = 'Servicio';
           try {
-            const services = await cachedRequest<any[]>(`/appointments/${app.appointment_id}/services`, 60000);
+            const services = await request<any[]>("GET", `/appointments/${app.appointment_id}/services`);
             if (services && services.length > 0) {
               service_name = services[0].name || services[0].service?.name || 'Servicio';
             }

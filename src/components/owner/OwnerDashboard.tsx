@@ -285,7 +285,7 @@ export default function OwnerDashboard() {
       if (barberIdValue) params.set('barber_id', barberIdValue);
       const query = params.toString();
       const endpoint = query ? `/api/owner/appointments?${query}` : '/api/owner/appointments';
-      const payload = await cachedRequest<OwnerAppointment[] | ApiListResponse<OwnerAppointment[]>>(endpoint, 60000);
+      const payload = await request<OwnerAppointment[] | ApiListResponse<OwnerAppointment[]>>("GET", endpoint);
       setAppointments(unwrapData<OwnerAppointment[]>(payload, []));
     } finally {
       setLoadingAppointments(false);

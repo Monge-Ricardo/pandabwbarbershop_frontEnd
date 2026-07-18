@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { request, cachedRequest } from "../api/api";
+import { request } from "../api/api";
 
 interface Appointment {
   id: string | number;
@@ -32,7 +32,7 @@ export default function BarberAgenda() {
     try {
       setLoading(true);
       setError("");
-      const data = await cachedRequest(`/appointments?appointment_date=${filterDate}`, 60000);
+      const data = await request("GET", `/appointments?appointment_date=${filterDate}`);
       setAppointments(Array.isArray(data) ? data : []);
     } catch (err: any) {
       console.error(err);
