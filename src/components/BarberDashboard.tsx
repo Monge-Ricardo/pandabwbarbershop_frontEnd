@@ -36,6 +36,7 @@ export default function BarberDashboard() {
     localStorage.removeItem('user_name');
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_id');
+    localStorage.removeItem('session_created_at');
     clearApiCache();
     window.location.href = "/login";
   };

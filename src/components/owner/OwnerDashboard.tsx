@@ -265,6 +265,7 @@ export default function OwnerDashboard() {
     localStorage.removeItem('user_name');
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_id');
+    localStorage.removeItem('session_created_at');
     navigate('/');
   };
 

@@ -15,8 +15,23 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('user_role');
+  const sessionCreatedAt = localStorage.getItem('session_created_at');
 
-  if (!token) {
+  // Check if session has expired (5 minutes)
+  const isSessionExpired = () => {
+    if (!sessionCreatedAt) return true;
+    const elapsed = Date.now() - parseInt(sessionCreatedAt, 10);
+    return elapsed > 5 * 60 * 1000; // 5 minutes
+  };
+
+  if (!token || isSessionExpired()) {
+    // Clear expired session details
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('session_created_at');
     return <Navigate to="/login" replace />;
   }
 
@@ -47,8 +62,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('user_role');
+  const sessionCreatedAt = localStorage.getItem('session_created_at');
 
-  if (token) {
+  const isSessionExpired = () => {
+    if (!sessionCreatedAt) return true;
+    const elapsed = Date.now() - parseInt(sessionCreatedAt, 10);
+    return elapsed > 5 * 60 * 1000;
+  };
+
+  if (token && !isSessionExpired()) {
     if (role === 'customer') return <Navigate to="/customer/dashboard" replace />;
     if (role === 'barber') return <Navigate to="/barber/dashboard" replace />;
     if (role === 'owner') return <Navigate to="/owner/dashboard" replace />;

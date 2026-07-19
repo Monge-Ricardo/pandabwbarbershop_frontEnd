@@ -53,6 +53,7 @@ export async function request<T = any>(
     localStorage.removeItem("user_name");
     localStorage.removeItem("user_email");
     localStorage.removeItem("user_id");
+    localStorage.removeItem("session_created_at");
     clearApiCache();
 
     if (!window.location.pathname.endsWith("/login")) {
