@@ -11,11 +11,23 @@ export default function BarberDashboard() {
   const [barberEmail, setBarberEmail] = useState<string>("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Onboarding States
+  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(true);
+  const [onboardingStep, setOnboardingStep] = useState<number>(1);
+  const [userId, setUserId] = useState<string>("");
+
   useEffect(() => {
     const name = localStorage.getItem("user_name") || "Barbero";
     const email = localStorage.getItem("user_email") || "";
+    const id = localStorage.getItem("user_id") || "";
     setBarberName(name);
     setBarberEmail(email);
+    setUserId(id);
+
+    if (id) {
+      const completed = localStorage.getItem(`onboarding_completed_${id}`) === "true";
+      setOnboardingCompleted(completed);
+    }
   }, []);
 
   const handleLogout = () => {
@@ -29,6 +41,104 @@ export default function BarberDashboard() {
   };
 
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(barberName)}&background=D4AF37&color=000`;
+
+  if (!onboardingCompleted) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-main)', padding: '2rem' }}>
+        <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
+          {/* Header */}
+          <div className="text-center mb-5 mt-4">
+            <img 
+              src="/img/BarberShop_PandaBlackAndWhite.png" 
+              alt="PANDA Logo" 
+              style={{ height: '64px', marginBottom: '15px' }} 
+            />
+            <h2 className="text-white font-heading text-uppercase" style={{ letterSpacing: '1px' }}>
+              ¡Bienvenido al Equipo, {barberName}!
+            </h2>
+            <p className="text-muted">
+              Configuremos tu perfil en 3 pasos rápidos antes de comenzar a recibir citas.
+            </p>
+          </div>
+
+          {/* Stepper progress indicator */}
+          <div className="wizard-container mb-5 p-4" style={{ position: 'relative' }}>
+            <div className="wizard-steps m-0" style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
+              <div className={`step-indicator ${onboardingStep === 1 ? 'active' : ''} ${onboardingStep > 1 ? 'completed' : ''}`}>1</div>
+              <div className={`step-indicator ${onboardingStep === 2 ? 'active' : ''} ${onboardingStep > 2 ? 'completed' : ''}`}>2</div>
+              <div className={`step-indicator ${onboardingStep === 3 ? 'active' : ''} ${onboardingStep > 3 ? 'completed' : ''}`}>3</div>
+            </div>
+            <div className="d-flex justify-content-between text-muted mt-3 px-1" style={{ fontSize: '0.85rem' }}>
+              <span className={onboardingStep === 1 ? 'text-gold font-weight-bold' : ''}>1. Tu Disponibilidad</span>
+              <span className={onboardingStep === 2 ? 'text-gold font-weight-bold' : ''}>2. Tus Servicios</span>
+              <span className={onboardingStep === 3 ? 'text-gold font-weight-bold' : ''}>3. Tus Productos</span>
+            </div>
+          </div>
+
+          {/* Step content */}
+          <div className="onboarding-step-content mb-4 bg-dark p-4 rounded-3 border border-secondary">
+            {onboardingStep === 1 && (
+              <div>
+                <h4 className="text-white mb-3 text-start"><i className="fa-solid fa-clock text-gold me-2"></i> Configura tu Horario de Trabajo</h4>
+                <p className="text-muted text-start mb-4">Establece los días de la semana y horas en las que estarás disponible para recibir reservas de clientes.</p>
+                <BarberAvailability />
+              </div>
+            )}
+            {onboardingStep === 2 && (
+              <div>
+                <h4 className="text-white mb-3 text-start"><i className="fa-solid fa-list-check text-gold me-2"></i> Configura los Servicios que Ofreces</h4>
+                <p className="text-muted text-start mb-4">Agrega los cortes, afeitados, peinados y demás tratamientos que realizas con sus respectivos precios y duraciones.</p>
+                <BarberServices />
+              </div>
+            )}
+            {onboardingStep === 3 && (
+              <div>
+                <h4 className="text-white mb-3 text-start"><i className="fa-solid fa-box-open text-gold me-2"></i> Configura tus Productos de Venta (Opcional)</h4>
+                <p className="text-muted text-start mb-4">Revisa tu catálogo y añade productos adicionales para la venta directa.</p>
+                <BarberInventory />
+              </div>
+            )}
+          </div>
+
+          {/* Navigation buttons */}
+          <div className="d-flex justify-content-between align-items-center mt-5 pt-3" style={{ borderTop: '1px solid var(--border-color)' }}>
+            <button
+              type="button"
+              className="btn btn-outline-secondary text-white"
+              onClick={() => setOnboardingStep(prev => Math.max(1, prev - 1))}
+              disabled={onboardingStep === 1}
+            >
+              <i className="fa-solid fa-arrow-left me-2"></i> Atrás
+            </button>
+
+            {onboardingStep < 3 ? (
+              <button
+                type="button"
+                className="btn btn-gold"
+                onClick={() => setOnboardingStep(prev => prev + 1)}
+              >
+                Siguiente Paso <i className="fa-solid fa-arrow-right ms-2"></i>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-gold"
+                onClick={() => {
+                  if (userId) {
+                    localStorage.setItem(`onboarding_completed_${userId}`, "true");
+                  }
+                  setOnboardingCompleted(true);
+                  setActiveTab("agenda");
+                }}
+              >
+                Finalizar y Entrar al Dashboard <i className="fa-solid fa-circle-check ms-2"></i>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-main)' }}>

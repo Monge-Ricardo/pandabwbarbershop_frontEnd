@@ -43,6 +43,84 @@ export default function BookingWizard({ onSuccess }: BookingWizardProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Custom Calendar State
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const MONTHS = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
+  const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+  const getDaysInMonth = (year: number, month: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (year: number, month: number) => {
+    const day = new Date(year, month, 1).getDay();
+    return day === 0 ? 6 : day - 1;
+  };
+
+  const prevMonth = () => {
+    const today = new Date();
+    if (currentMonth.getFullYear() === today.getFullYear() && currentMonth.getMonth() === today.getMonth()) {
+      return;
+    }
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  };
+
+  const renderCalendar = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+
+    const totalDays = getDaysInMonth(year, month);
+    const firstDayIndex = getFirstDayOfMonth(year, month);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const cells = [];
+
+    // Empty cells before the first day of the month
+    for (let i = 0; i < firstDayIndex; i++) {
+      cells.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
+    }
+
+    // Actual days of the month
+    for (let day = 1; day <= totalDays; day++) {
+      const cellDate = new Date(year, month, day);
+      const isPast = cellDate < today;
+
+      const mmStr = String(month + 1).padStart(2, '0');
+      const ddStr = String(day).padStart(2, '0');
+      const dateString = `${year}-${mmStr}-${ddStr}`;
+
+      const isSelected = selectedDate === dateString;
+
+      cells.push(
+        <button
+          key={`day-${day}`}
+          type="button"
+          disabled={isPast}
+          className={`calendar-day border-0 bg-transparent text-white ${isSelected ? 'selected' : ''} ${isPast ? 'disabled' : ''}`}
+          onClick={() => {
+            if (!isPast) {
+              setSelectedDate(dateString);
+            }
+          }}
+        >
+          {day}
+        </button>
+      );
+    }
+
+    return cells;
+  };
+
   // Load barbers on mount
   useEffect(() => {
     async function loadBarbers() {
@@ -77,7 +155,7 @@ export default function BookingWizard({ onSuccess }: BookingWizardProps) {
       setError(null);
       try {
         const url = `/api/customer/services?barbershop_id=${shopId}`;
-        const res = await cachedRequest<Service[]>(url, 300000);
+        const res = await request<Service[]>('GET', url);
         setServices(res || []);
       } catch (err: any) {
         console.error('Failed to load services, using fallback:', err);
@@ -109,7 +187,7 @@ export default function BookingWizard({ onSuccess }: BookingWizardProps) {
       setError(null);
       try {
         const url = `/api/customer/available-times?barber_id=${selectedBarber!.id}&service_id=${selectedService!.service_id}&date=${selectedDate}`;
-        const res = await cachedRequest<{ available_slots: string[] }>(url, 60000);
+        const res = await request<{ available_slots: string[] }>('GET', url);
         setAvailableSlots(res.available_slots || []);
       } catch (err: any) {
         console.error('Failed to load available times, using fallbacks:', err);
@@ -150,13 +228,6 @@ export default function BookingWizard({ onSuccess }: BookingWizardProps) {
     }
   };
 
-  const getMinDate = () => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  };
 
   return (
     <div className="wizard-container">
@@ -280,13 +351,30 @@ export default function BookingWizard({ onSuccess }: BookingWizardProps) {
           <div className="row g-4 text-start">
             <div className="col-md-6">
               <label className="text-muted mb-2 font-weight-bold">Elegir una Fecha</label>
-              <input
-                type="date"
-                min={getMinDate()}
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="form-control bg-dark text-white border-secondary p-3"
-              />
+              
+              <div className="custom-calendar">
+                <div className="calendar-header">
+                  <button type="button" onClick={prevMonth} disabled={
+                    currentMonth.getFullYear() === new Date().getFullYear() &&
+                    currentMonth.getMonth() === new Date().getMonth()
+                  }>
+                    <i className="fa-solid fa-chevron-left"></i>
+                  </button>
+                  <h5 className="mb-0 text-white">
+                    {MONTHS[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                  </h5>
+                  <button type="button" onClick={nextMonth}>
+                    <i className="fa-solid fa-chevron-right"></i>
+                  </button>
+                </div>
+                
+                <div className="calendar-grid">
+                  {WEEKDAYS.map((day) => (
+                    <div key={day} className="calendar-weekday">{day}</div>
+                  ))}
+                  {renderCalendar()}
+                </div>
+              </div>
             </div>
             <div className="col-md-6">
               <label className="text-muted mb-2 font-weight-bold">Horarios Disponibles</label>

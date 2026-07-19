@@ -115,7 +115,7 @@ export default function BarberAgenda() {
         </div>
       </div>
 
-      <div className="p-4" style={{ backgroundColor: "#161615", borderRadius: "8px", border: "1px solid #333" }}>
+      <div className="panel-card mt-4">
         {error && <div className="alert alert-danger" style={{ backgroundColor: "#2c0e0e", borderColor: "#7a1a1a", color: "#ff8888" }}>{error}</div>}
 
         {loading ? (
@@ -132,9 +132,9 @@ export default function BarberAgenda() {
           </div>
         ) : (
           <div className="table-responsive">
-            <table className="table table-dark table-hover mb-0" style={{ borderColor: "#333" }}>
+            <table className="table table-dashboard table-hover mb-0">
               <thead>
-                <tr style={{ color: "#D4AF37" }}>
+                <tr>
                   <th>Hora</th>
                   <th>Cliente</th>
                   <th>Notas / Comentarios</th>

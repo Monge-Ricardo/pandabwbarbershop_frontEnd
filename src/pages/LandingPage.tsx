@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader } from 'lucide-react';
-import { cachedRequest, getCachedData, setCachedData } from '../api/api';
+import { request, cachedRequest, getCachedData, setCachedData } from '../api/api';
 
 interface Service {
   service_id: string;
@@ -60,10 +60,9 @@ export default function LandingPage() {
 
     async function loadData() {
       try {
-        const servicesData = await cachedRequest<Service[]>('/api/customer/services', 300000);
+        const servicesData = await request<Service[]>('GET', '/api/customer/services');
         const freshServices = servicesData || [];
         setServices(freshServices);
-        setCachedData('services_catalog', freshServices);
       } catch (error) {
         console.error('Error loading services, using fallbacks:', error);
         const fallbackServices = [

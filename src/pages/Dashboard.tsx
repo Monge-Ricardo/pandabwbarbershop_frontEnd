@@ -48,6 +48,13 @@ export default function Dashboard() {
   // Profile form state
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+
+  // Invitation states
+  const [showInvitationPrompt, setShowInvitationPrompt] = useState(false);
+  const [inviteCode, setInviteCode] = useState('');
+  const [claimingInvite, setClaimingInvite] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState(false);
   
   const navigate = useNavigate();
 
@@ -60,6 +67,11 @@ export default function Dashboard() {
         setFullName(profile.full_name || '');
         setPhone(profile.phone || '');
         setError(null);
+
+        const hideInvite = localStorage.getItem('hide_barber_invite') === 'true';
+        if (!hideInvite) {
+          setShowInvitationPrompt(true);
+        }
       } catch (err: any) {
         console.error('Failed to load profile:', err);
         setError('No se pudo verificar la sesión. Inicie sesión de nuevo.');
@@ -178,6 +190,29 @@ export default function Dashboard() {
     localStorage.removeItem('user_id');
     clearApiCache();
     navigate('/');
+  };
+
+  const handleClaimInvitation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInviteError(null);
+    setClaimingInvite(true);
+    try {
+      await request('POST', '/barbershops/invitations/claim', {
+        code: inviteCode.trim().toUpperCase()
+      });
+      
+      setInviteSuccess(true);
+      localStorage.setItem('user_role', 'barber');
+      clearApiCache();
+      
+      setTimeout(() => {
+        navigate('/barber/dashboard');
+      }, 2000);
+    } catch (err: any) {
+      setInviteError(err.message || 'Código de invitación inválido o expirado.');
+    } finally {
+      setClaimingInvite(false);
+    }
   };
 
   const handleBookingSuccess = () => {
@@ -408,6 +443,65 @@ export default function Dashboard() {
           </section>
         )}
       </main>
+
+      {showInvitationPrompt && (
+        <div className="modal-backdrop show" style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 1050 }}>
+          <div className="panel-card p-5 text-center" style={{ maxWidth: '500px', width: '90%', border: '1px solid var(--primary-gold)' }}>
+            <i className="fa-solid fa-scissors mb-3 text-gold" style={{ fontSize: '3rem' }}></i>
+            <h3 className="font-heading text-white mb-2" style={{ letterSpacing: '1px' }}>¿ERES BARBERO EN SHARKHUB?</h3>
+            <p className="text-muted mb-4" style={{ fontSize: '0.95rem' }}>
+              Si tu administrador te otorgó un código de invitación para unirte a la barbería, ingrésalo a continuación para activar tu cuenta de Barbero.
+            </p>
+            
+            {inviteError && (
+              <div className="alert alert-danger bg-danger/10 border-danger/30 text-danger p-2 mb-3 text-start" style={{ fontSize: '0.85rem' }}>
+                <i className="fa-solid fa-circle-exclamation me-2"></i> {inviteError}
+              </div>
+            )}
+
+            {inviteSuccess && (
+              <div className="alert alert-success bg-success/10 border-success/30 text-success p-2 mb-3 text-start" style={{ fontSize: '0.85rem' }}>
+                <i className="fa-solid fa-circle-check me-2"></i> ¡Código verificado! Configurando tu cuenta de barbero...
+              </div>
+            )}
+
+            <form onSubmit={handleClaimInvitation} className="mb-4">
+              <div className="mb-3">
+                <input
+                  type="text"
+                  className="form-control text-center text-uppercase font-heading font-weight-bold"
+                  placeholder="Ej: SH-000-XXX"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  disabled={claimingInvite || inviteSuccess}
+                  style={{ letterSpacing: '2px', fontSize: '1.2rem', borderColor: 'var(--border-color)', color: 'var(--text-main)', background: '#222' }}
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="btn btn-gold w-100 p-2 font-weight-bold"
+                disabled={claimingInvite || inviteSuccess}
+              >
+                {claimingInvite ? 'Verificando...' : 'Activar Cuenta de Barbero'}
+              </button>
+            </form>
+
+            <button
+              type="button"
+              className="btn btn-link text-muted text-decoration-none"
+              style={{ fontSize: '0.9rem' }}
+              onClick={() => {
+                localStorage.setItem('hide_barber_invite', 'true');
+                setShowInvitationPrompt(false);
+              }}
+              disabled={claimingInvite || inviteSuccess}
+            >
+              No tengo código, continuar como Cliente
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

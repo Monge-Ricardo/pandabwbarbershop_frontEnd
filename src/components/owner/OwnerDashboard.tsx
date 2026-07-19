@@ -713,50 +713,52 @@ export default function OwnerDashboard() {
               </form>
             </div>
 
-            <div className="table-responsive">
-              <table className="table table-dashboard table-hover mt-3">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Hora</th>
-                    <th>Cliente</th>
-                    <th>Barbero</th>
-                    <th>Servicio</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {appointments.length === 0 ? (
-                    <tr><td colSpan={7} className="text-center text-muted">No hay citas para los filtros seleccionados.</td></tr>
-                  ) : appointments.map((appointment) => {
-                    const currentAppointmentId = appointmentId(appointment);
-                    const isUpdating = updatingAppointmentId === currentAppointmentId;
-                    const canConfirm = appointment.status !== 'confirmed' && appointment.status !== 'cancelled';
-                    const canCancel = appointment.status !== 'cancelled';
-                    return (
-                      <tr key={currentAppointmentId}>
-                        <td>{formatDate(appointment.appointment_date)}</td>
-                        <td>{formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}</td>
-                        <td>{appointmentClientName(appointment)}</td>
-                        <td>{appointmentBarberName(appointment, barbers)}</td>
-                        <td>{appointmentServiceName(appointment)}</td>
-                        <td><span className={appointmentStatusClass(appointment.status)}>{formatAppointmentStatus(appointment.status)}</span></td>
-                        <td>
-                          <div className="d-flex gap-2 flex-wrap">
-                            {canConfirm && (
-                              <button className="btn btn-outline-gold btn-sm" disabled={isUpdating} onClick={() => handleUpdateAppointmentStatus(appointment, 'confirmed')}>Confirmar</button>
-                            )}
-                            {canCancel && (
-                              <button className="btn btn-outline-danger btn-sm" disabled={isUpdating} onClick={() => handleUpdateAppointmentStatus(appointment, 'cancelled')}>Cancelar</button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div className="panel-card mt-4">
+              <div className="table-responsive">
+                <table className="table table-dashboard table-hover mb-0">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Hora</th>
+                      <th>Cliente</th>
+                      <th>Barbero</th>
+                      <th>Servicio</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {appointments.length === 0 ? (
+                      <tr><td colSpan={7} className="text-center text-muted">No hay citas para los filtros seleccionados.</td></tr>
+                    ) : appointments.map((appointment) => {
+                      const currentAppointmentId = appointmentId(appointment);
+                      const isUpdating = updatingAppointmentId === currentAppointmentId;
+                      const canConfirm = appointment.status !== 'confirmed' && appointment.status !== 'cancelled';
+                      const canCancel = appointment.status !== 'cancelled';
+                      return (
+                        <tr key={currentAppointmentId}>
+                          <td>{formatDate(appointment.appointment_date)}</td>
+                          <td>{formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}</td>
+                          <td>{appointmentClientName(appointment)}</td>
+                          <td>{appointmentBarberName(appointment, barbers)}</td>
+                          <td>{appointmentServiceName(appointment)}</td>
+                          <td><span className={appointmentStatusClass(appointment.status)}>{formatAppointmentStatus(appointment.status)}</span></td>
+                          <td>
+                            <div className="d-flex gap-2 flex-wrap">
+                              {canConfirm && (
+                                <button className="btn btn-outline-gold btn-sm" disabled={isUpdating} onClick={() => handleUpdateAppointmentStatus(appointment, 'confirmed')}>Confirmar</button>
+                              )}
+                              {canCancel && (
+                                <button className="btn btn-outline-danger btn-sm" disabled={isUpdating} onClick={() => handleUpdateAppointmentStatus(appointment, 'cancelled')}>Cancelar</button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
         )}
