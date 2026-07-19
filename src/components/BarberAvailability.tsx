@@ -141,25 +141,21 @@ export default function BarberAvailability() {
                   </div>
 
                   {config.isAvailable ? (
-                    <div className="d-flex align-items-center gap-3">
-                      <div>
-                        <span className="text-muted d-block small mb-1">Hora Inicio</span>
+                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                      <div className="d-flex align-items-center gap-2">
                         <input
                           type="time"
-                          className="form-control form-control-sm text-white"
-                          style={{ backgroundColor: "#0a0a0a", border: "1px solid #444" }}
+                          className="form-control form-control-sm text-white text-center"
+                          style={{ backgroundColor: "#0a0a0a", border: "1px solid #444", width: "100px", padding: "5px" }}
                           value={config.startTime}
                           onChange={(e) => handleTimeChange(day.dayNum, "startTime", e.target.value)}
                           required
                         />
-                      </div>
-                      <span className="text-muted mt-4">a</span>
-                      <div>
-                        <span className="text-muted d-block small mb-1">Hora Fin</span>
+                        <span className="text-muted px-1">a</span>
                         <input
                           type="time"
-                          className="form-control form-control-sm text-white"
-                          style={{ backgroundColor: "#0a0a0a", border: "1px solid #444" }}
+                          className="form-control form-control-sm text-white text-center"
+                          style={{ backgroundColor: "#0a0a0a", border: "1px solid #444", width: "100px", padding: "5px" }}
                           value={config.endTime}
                           onChange={(e) => handleTimeChange(day.dayNum, "endTime", e.target.value)}
                           required

@@ -197,12 +197,13 @@ export default function Dashboard() {
     setInviteError(null);
     setClaimingInvite(true);
     try {
-      await request('POST', '/barbershops/invitations/claim', {
+      const res = await request<{ status: string; role: string; barbershop_id: string }>('POST', '/barbershops/invitations/claim', {
         code: inviteCode.trim().toUpperCase()
       });
       
       setInviteSuccess(true);
       localStorage.setItem('user_role', 'barber');
+      localStorage.setItem('barbershop_id', res.barbershop_id || '');
       clearApiCache();
       
       setTimeout(() => {

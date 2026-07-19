@@ -337,3 +337,29 @@
     cursor: default;
     background: transparent;
 }
+
+/* ---------- Responsive Calendar & Table Selection Utilities ---------- */
+@media (max-width: 576px) {
+    .custom-calendar {
+        padding: 0.8rem;
+    }
+    .calendar-grid {
+        gap: 4px;
+    }
+    .calendar-day {
+        padding: 6px 2px;
+        font-size: 0.85rem;
+    }
+    .calendar-weekday {
+        font-size: 0.8rem;
+    }
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.table-activeselected {
+    background-color: rgba(212, 175, 55, 0.12) !important;
+    border-left: 3px solid var(--primary-gold) !important;
+}

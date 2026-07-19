@@ -102,14 +102,23 @@ export default function BarberDashboard() {
 
           {/* Navigation buttons */}
           <div className="d-flex justify-content-between align-items-center mt-5 pt-3" style={{ borderTop: '1px solid var(--border-color)' }}>
-            <button
-              type="button"
-              className="btn btn-outline-secondary text-white"
-              onClick={() => setOnboardingStep(prev => Math.max(1, prev - 1))}
-              disabled={onboardingStep === 1}
-            >
-              <i className="fa-solid fa-arrow-left me-2"></i> Atrás
-            </button>
+            {onboardingStep === 1 ? (
+              <button
+                type="button"
+                className="btn btn-outline-danger"
+                onClick={handleLogout}
+              >
+                Cancelar y Salir <i className="fa-solid fa-arrow-right-from-bracket ms-2"></i>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-outline-secondary text-white"
+                onClick={() => setOnboardingStep(prev => Math.max(1, prev - 1))}
+              >
+                <i className="fa-solid fa-arrow-left me-2"></i> Atrás
+              </button>
+            )}
 
             {onboardingStep < 3 ? (
               <button

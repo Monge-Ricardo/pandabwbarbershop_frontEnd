@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { request, cachedRequest } from "../api/api";
@@ -21,11 +21,24 @@ export default function BarberServices() {
   const [showModal, setShowModal] = useState<boolean>(false);
   
   const [editingId, setEditingId] = useState<string | number | null>(null);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [price, setPrice] = useState<string>("");
   const [duration, setDuration] = useState<string>("");
   const [isActive, setIsActive] = useState<boolean>(true);
+
+  const touchTimerRef = useRef<any>(null);
+  const handleTouchStart = (service: Service) => {
+    touchTimerRef.current = setTimeout(() => {
+      openEditModal(service);
+    }, 700); // 700ms long press
+  };
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+    }
+  };
 
   const barbershopId = localStorage.getItem("barbershop_id") || "bf338534-365a-4d8d-b45d-1e961e182467";
 
@@ -40,6 +53,7 @@ export default function BarberServices() {
       setError("No se pudieron cargar los servicios.");
     } finally {
       setLoading(false);
+      setSelectedService(null);
     }
   };
 
@@ -72,6 +86,7 @@ export default function BarberServices() {
     e.preventDefault();
     try {
       const payload = {
+        barbershop_id: barbershopId,
         name,
         description,
         price: parseFloat(price),
@@ -116,7 +131,43 @@ export default function BarberServices() {
         </button>
       </div>
 
-      <div className="panel-card mt-4">
+      {/* Compliant Action Toolbar - No Inline Actions */}
+      <div className="panel-card mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3" style={{ border: '1px solid var(--border-color)', backgroundColor: '#1c1c1a' }}>
+        <div className="d-flex align-items-center gap-2">
+          <i className="fa-solid fa-circle-info text-gold fs-5"></i>
+          {selectedService ? (
+            <div className="text-start">
+              <span className="text-white fw-bold">Seleccionado:</span> <span className="text-gold fw-bold">{selectedService.name}</span>
+              <span className="text-muted ms-2">(${parseFloat(String(selectedService.price)).toFixed(2)} - {selectedService.duration_minutes || selectedService.duration || 30} min)</span>
+            </div>
+          ) : (
+            <span className="text-muted italic">Selecciona una fila de la tabla para gestionarla.</span>
+          )}
+        </div>
+        <div className="d-flex gap-2">
+          <button 
+            type="button"
+            onClick={() => selectedService && openEditModal(selectedService)} 
+            className="btn btn-outline-gold px-3 py-2 fw-bold"
+            disabled={!selectedService}
+          >
+            <i className="fa-solid fa-pen-to-square me-1"></i> Editar
+          </button>
+          <button 
+            type="button"
+            onClick={() => {
+              const sId = selectedService?.service_id || selectedService?.id;
+              if (sId) handleDelete(sId);
+            }} 
+            className="btn btn-outline-danger px-3 py-2 fw-bold"
+            disabled={!selectedService}
+          >
+            <i className="fa-solid fa-trash me-1"></i> Eliminar
+          </button>
+        </div>
+      </div>
+
+      <div className="panel-card mt-3">
         {error && <div className="alert alert-danger" style={{ backgroundColor: "#2c0e0e", borderColor: "#7a1a1a", color: "#ff8888" }}>{error}</div>}
 
         {loading ? (
@@ -141,19 +192,29 @@ export default function BarberServices() {
                   <th>Duración</th>
                   <th>Precio</th>
                   <th>Estado</th>
-                  <th className="text-end">Acciones</th>
+                  <th className="text-end d-none d-md-table-cell" style={{ width: '60px' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {services.map((service) => {
                   const sId = service.service_id || service.id;
+                  const isSelected = selectedService?.service_id === sId || selectedService?.id === sId;
                   return (
-                    <tr key={sId} className="align-middle">
-                      <td className="fw-bold" style={{ color: "#fff" }}>{service.name}</td>
+                    <tr 
+                      key={sId} 
+                      className={`align-middle cursor-pointer ${isSelected ? 'table-activeselected' : ''}`}
+                      onClick={() => setSelectedService(service)}
+                      onTouchStart={() => handleTouchStart(service)}
+                      onTouchEnd={handleTouchEnd}
+                      onTouchCancel={handleTouchEnd}
+                      style={{ transition: 'background-color 0.2s', userSelect: 'none' }}
+                      title="Manten presionado en celular o clic en el menu en PC para editar"
+                    >
+                      <td className="fw-bold text-white">{service.name}</td>
                       <td className="text-muted" style={{ maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {service.description || "Sin descripción"}
                       </td>
-                      <td>{service.duration_minutes || service.duration || "30"} min</td>
+                      <td className="text-white">{service.duration_minutes || service.duration || "30"} min</td>
                       <td className="fw-bold" style={{ color: "#D4AF37" }}>${parseFloat(String(service.price)).toFixed(2)}</td>
                       <td>
                         <span className={`badge px-3 py-2 text-uppercase`} style={{
@@ -164,15 +225,18 @@ export default function BarberServices() {
                           {service.is_active !== false ? "Activo" : "Inactivo"}
                         </span>
                       </td>
-                      <td className="text-end">
-                        <div className="d-flex justify-content-end gap-2">
-                          <button onClick={() => openEditModal(service)} className="btn btn-sm btn-outline-gold">
-                            <i className="fa-solid fa-pen-to-square"></i> Editar
-                          </button>
-                          <button onClick={() => sId && handleDelete(sId)} className="btn btn-sm btn-outline-danger">
-                            <i className="fa-solid fa-trash"></i> Eliminar
-                          </button>
-                        </div>
+                      <td className="text-end d-none d-md-table-cell">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-link text-gold p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditModal(service);
+                          }}
+                          title="Editar servicio (PC)"
+                        >
+                          <i className="fa-solid fa-bars fs-5"></i>
+                        </button>
                       </td>
                     </tr>
                   );

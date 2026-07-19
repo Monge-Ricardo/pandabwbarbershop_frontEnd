@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { request, cachedRequest } from "../api/api";
@@ -20,6 +20,7 @@ export default function BarberInventory() {
   const [showModal, setShowModal] = useState<boolean>(false);
 
   const [editingId, setEditingId] = useState<string | number | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [price, setPrice] = useState<string>("");
@@ -27,6 +28,20 @@ export default function BarberInventory() {
   const [imageUrl, setImageUrl] = useState<string>("");
 
   const barbershopId = localStorage.getItem("barbershop_id") || "bf338534-365a-4d8d-b45d-1e961e182467";
+
+  const touchTimerRef = useRef<any>(null);
+
+  const handleTouchStart = (product: Product) => {
+    touchTimerRef.current = setTimeout(() => {
+      openEditModal(product);
+    }, 700);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -39,6 +54,7 @@ export default function BarberInventory() {
       setError("No se pudieron cargar los productos.");
     } finally {
       setLoading(false);
+      setSelectedProduct(null);
     }
   };
 
@@ -71,6 +87,7 @@ export default function BarberInventory() {
     e.preventDefault();
     try {
       const payload = {
+        barbershop_id: barbershopId,
         name,
         description,
         price: parseFloat(price),
@@ -115,7 +132,43 @@ export default function BarberInventory() {
         </button>
       </div>
 
-      <div className="panel-card mt-4">
+      {/* Compliant Action Toolbar - No Inline Actions */}
+      <div className="panel-card mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3" style={{ border: '1px solid var(--border-color)', backgroundColor: '#1c1c1a' }}>
+        <div className="d-flex align-items-center gap-2">
+          <i className="fa-solid fa-circle-info text-gold fs-5"></i>
+          {selectedProduct ? (
+            <div className="text-start">
+              <span className="text-white fw-bold">Seleccionado:</span> <span className="text-gold fw-bold">{selectedProduct.name}</span>
+              <span className="text-muted ms-2">(${parseFloat(String(selectedProduct.price)).toFixed(2)} - {selectedProduct.stock} uds)</span>
+            </div>
+          ) : (
+            <span className="text-muted italic">Selecciona una fila de la tabla para gestionarla.</span>
+          )}
+        </div>
+        <div className="d-flex gap-2">
+          <button 
+            type="button"
+            onClick={() => selectedProduct && openEditModal(selectedProduct)} 
+            className="btn btn-outline-gold px-3 py-2 fw-bold"
+            disabled={!selectedProduct}
+          >
+            <i className="fa-solid fa-pen-to-square me-1"></i> Editar
+          </button>
+          <button 
+            type="button"
+            onClick={() => {
+              const pId = selectedProduct?.product_id || selectedProduct?.id;
+              if (pId) handleDelete(pId);
+            }} 
+            className="btn btn-outline-danger px-3 py-2 fw-bold"
+            disabled={!selectedProduct}
+          >
+            <i className="fa-solid fa-trash me-1"></i> Eliminar
+          </button>
+        </div>
+      </div>
+
+      <div className="panel-card mt-3">
         {error && <div className="alert alert-danger" style={{ backgroundColor: "#2c0e0e", borderColor: "#7a1a1a", color: "#ff8888" }}>{error}</div>}
 
         {loading ? (
@@ -140,14 +193,23 @@ export default function BarberInventory() {
                   <th>Descripción</th>
                   <th>Stock</th>
                   <th>Precio</th>
-                  <th className="text-end">Acciones</th>
+                  <th className="text-end" style={{ width: '60px' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((product) => {
                   const pId = product.product_id || product.id;
+                  const isSelected = selectedProduct?.product_id === pId || selectedProduct?.id === pId;
                   return (
-                    <tr key={pId} className="align-middle">
+                    <tr 
+                      key={pId} 
+                      className={`align-middle cursor-pointer ${isSelected ? 'table-activeselected' : ''}`}
+                      onClick={() => setSelectedProduct(product)}
+                      onTouchStart={() => handleTouchStart(product)}
+                      onTouchEnd={handleTouchEnd}
+                      onTouchCancel={handleTouchEnd}
+                      style={{ transition: 'background-color 0.2s' }}
+                    >
                       <td>
                         <img
                           src={product.image_url || "https://images.unsplash.com/photo-1593121925328-7b3001606ec8?q=80&w=100&auto=format&fit=crop"}
@@ -156,7 +218,7 @@ export default function BarberInventory() {
                           style={{ width: "50px", height: "50px", objectFit: "cover", border: "1px solid #333" }}
                         />
                       </td>
-                      <td className="fw-bold" style={{ color: "#fff" }}>{product.name}</td>
+                      <td className="fw-bold text-white">{product.name}</td>
                       <td className="text-muted" style={{ maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {product.description || "Sin descripción"}
                       </td>
@@ -167,14 +229,14 @@ export default function BarberInventory() {
                       </td>
                       <td className="fw-bold" style={{ color: "#D4AF37" }}>${parseFloat(String(product.price)).toFixed(2)}</td>
                       <td className="text-end">
-                        <div className="d-flex justify-content-end gap-2">
-                          <button onClick={() => openEditModal(product)} className="btn btn-sm btn-outline-gold">
-                            <i className="fa-solid fa-pen-to-square"></i> Editar
-                          </button>
-                          <button onClick={() => pId && handleDelete(pId)} className="btn btn-sm btn-outline-danger">
-                            <i className="fa-solid fa-trash"></i> Eliminar
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-link text-gold p-0"
+                          onClick={(e) => { e.stopPropagation(); openEditModal(product); }}
+                          title="Editar producto"
+                        >
+                          <i className="fa-solid fa-bars fs-5"></i>
+                        </button>
                       </td>
                     </tr>
                   );

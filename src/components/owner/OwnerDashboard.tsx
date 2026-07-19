@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, CalendarDays, RefreshCw, Scissors, Ticket, Users } from 'lucide-react';
 import { cachedRequest, clearApiCache, request } from '../../api/api';
@@ -201,6 +201,10 @@ export default function OwnerDashboard() {
   const [appointments, setAppointments] = useState<OwnerAppointment[]>([]);
   const [invitations, setInvitations] = useState<InvitationCode[]>([]);
 
+  // Selection states (for no-inline-actions)
+  const [selectedBarberManage, setSelectedBarberManage] = useState<BarberMember | null>(null);
+  const [selectedAppointmentManage, setSelectedAppointmentManage] = useState<OwnerAppointment | null>(null);
+
   const [appointmentDate, setAppointmentDate] = useState(todayIsoDate());
   const [appointmentBarberId, setAppointmentBarberId] = useState('');
   const [newBarberEmail, setNewBarberEmail] = useState('');
@@ -216,6 +220,19 @@ export default function OwnerDashboard() {
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Touch handling for barber rows (mobile long press)
+  const touchTimerRef = useRef<any>(null);
+  const handleBarberTouchStart = (barber: BarberMember) => {
+    touchTimerRef.current = setTimeout(() => {
+      setSelectedBarberManage(barber);
+    }, 700);
+  };
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+    }
+  };
 
   const activeBarbers = useMemo(
     () => barbers.filter((barber) => barber.status === 'active'),
@@ -275,6 +292,7 @@ export default function OwnerDashboard() {
   const loadBarbers = async () => {
     const payload = await cachedRequest<BarberMember[] | ApiListResponse<BarberMember[]>>('/api/owner/barbers', 180000);
     setBarbers(unwrapData<BarberMember[]>(payload, []));
+    setSelectedBarberManage(null);
   };
 
   const loadAppointments = async (dateValue = appointmentDate, barberIdValue = appointmentBarberId) => {
@@ -287,6 +305,7 @@ export default function OwnerDashboard() {
       const endpoint = query ? `/api/owner/appointments?${query}` : '/api/owner/appointments';
       const payload = await request<OwnerAppointment[] | ApiListResponse<OwnerAppointment[]>>("GET", endpoint);
       setAppointments(unwrapData<OwnerAppointment[]>(payload, []));
+      setSelectedAppointmentManage(null);
     } finally {
       setLoadingAppointments(false);
     }
@@ -641,6 +660,33 @@ export default function OwnerDashboard() {
               </form>
             </div>
 
+            {/* Compliant Action Toolbar - No Inline Actions */}
+            <div className="panel-card mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4" style={{ border: '1px solid var(--border-color)', backgroundColor: '#1c1c1a' }}>
+              <div className="d-flex align-items-center gap-2">
+                <i className="fa-solid fa-circle-info text-gold fs-5"></i>
+                {selectedBarberManage ? (
+                  <div className="text-start">
+                    <span className="text-white fw-bold">Seleccionado:</span> <span className="text-gold fw-bold">{barberName(selectedBarberManage)}</span>
+                    <span className="text-muted ms-2">({selectedBarberManage.status === 'active' ? 'Activo' : 'Inactivo'})</span>
+                  </div>
+                ) : (
+                  <span className="text-muted italic">Selecciona un barbero de la tabla para activar o desactivar su cuenta.</span>
+                )}
+              </div>
+              <div className="d-flex gap-2">
+                {selectedBarberManage && (
+                  <button 
+                    type="button"
+                    onClick={() => handleToggleBarberStatus(selectedBarberManage)} 
+                    className={`btn fw-bold px-3 py-2 ${selectedBarberManage.status === 'active' ? 'btn-outline-danger' : 'btn-outline-gold'}`}
+                    disabled={updatingMemberId === memberId(selectedBarberManage)}
+                  >
+                    {updatingMemberId === memberId(selectedBarberManage) ? 'Actualizando...' : selectedBarberManage.status === 'active' ? 'Desactivar Barbero' : 'Activar Barbero'}
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="table-responsive">
               <table className="table table-dashboard table-hover">
                 <thead>
@@ -649,32 +695,35 @@ export default function OwnerDashboard() {
                     <th>Email</th>
                     <th>Teléfono</th>
                     <th>Estado</th>
-                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {barbers.length === 0 ? (
-                    <tr><td colSpan={5} className="text-center text-muted">No hay barberos registrados.</td></tr>
+                    <tr><td colSpan={4} className="text-center text-muted">No hay barberos registrados.</td></tr>
                   ) : barbers.map((barber) => {
                     const currentMemberId = memberId(barber);
                     const name = barberName(barber);
                     const isActive = barber.status === 'active';
+                    const isSelected = selectedBarberManage && memberId(selectedBarberManage) === currentMemberId;
                     return (
-                      <tr key={currentMemberId || barber.user_id || name}>
+                      <tr 
+                        key={currentMemberId || barber.user_id || name}
+                        className={`align-middle cursor-pointer ${isSelected ? 'table-activeselected' : ''}`}
+                        onClick={() => setSelectedBarberManage(barber)}
+                        onTouchStart={() => handleBarberTouchStart(barber)}
+                        onTouchEnd={handleTouchEnd}
+                        onTouchCancel={handleTouchEnd}
+                        style={{ transition: 'background-color 0.2s' }}
+                      >
                         <td>
                           <div className="d-flex align-items-center gap-2">
                             <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=D4AF37&color=000`} alt={name} className="avatar-sm" />
-                            <span>{name}</span>
+                            <span className="text-white fw-bold">{name}</span>
                           </div>
                         </td>
-                        <td>{barber.email || 'Sin correo'}</td>
-                        <td>{barber.phone || 'Sin teléfono'}</td>
+                        <td className="text-muted">{barber.email || 'Sin correo'}</td>
+                        <td className="text-muted">{barber.phone || 'Sin teléfono'}</td>
                         <td><span className={memberStatusClass(barber.status)}>{isActive ? 'Activo' : 'Inactivo'}</span></td>
-                        <td>
-                          <button className={`btn btn-sm ${isActive ? 'btn-outline-danger' : 'btn-outline-gold'}`} onClick={() => handleToggleBarberStatus(barber)} disabled={updatingMemberId === currentMemberId}>
-                            {updatingMemberId === currentMemberId ? 'Actualizando...' : isActive ? 'Desactivar' : 'Activar'}
-                          </button>
-                        </td>
                       </tr>
                     );
                   })}
@@ -713,7 +762,50 @@ export default function OwnerDashboard() {
               </form>
             </div>
 
-            <div className="panel-card mt-4">
+            {/* Compliant Action Toolbar - No Inline Actions */}
+            <div className="panel-card mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4" style={{ border: '1px solid var(--border-color)', backgroundColor: '#1c1c1a' }}>
+              <div className="d-flex align-items-center gap-2">
+                <i className="fa-solid fa-circle-info text-gold fs-5"></i>
+                {selectedAppointmentManage ? (
+                  <div className="text-start">
+                    <span className="text-white fw-bold">Seleccionado:</span> <span className="text-gold fw-bold">{appointmentClientName(selectedAppointmentManage)}</span>
+                    <span className="text-muted ms-2">
+                      ({formatDate(selectedAppointmentManage.appointment_date)} a las {formatTime(selectedAppointmentManage.start_time)} - {formatAppointmentStatus(selectedAppointmentManage.status)})
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-muted italic">Selecciona una cita de la tabla para gestionarla (confirmar o cancelar).</span>
+                )}
+              </div>
+              <div className="d-flex gap-2">
+                {selectedAppointmentManage && (
+                  <>
+                    {selectedAppointmentManage.status !== 'confirmed' && selectedAppointmentManage.status !== 'cancelled' && (
+                      <button 
+                        type="button"
+                        onClick={() => handleUpdateAppointmentStatus(selectedAppointmentManage, 'confirmed')} 
+                        className="btn btn-outline-gold fw-bold px-3 py-2"
+                        disabled={updatingAppointmentId === appointmentId(selectedAppointmentManage)}
+                      >
+                        Confirmar Cita
+                      </button>
+                    )}
+                    {selectedAppointmentManage.status !== 'cancelled' && (
+                      <button 
+                        type="button"
+                        onClick={() => handleUpdateAppointmentStatus(selectedAppointmentManage, 'cancelled')} 
+                        className="btn btn-outline-danger fw-bold px-3 py-2"
+                        disabled={updatingAppointmentId === appointmentId(selectedAppointmentManage)}
+                      >
+                        Cancelar Cita
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="panel-card mt-3">
               <div className="table-responsive">
                 <table className="table table-dashboard table-hover mb-0">
                   <thead>
@@ -724,35 +816,27 @@ export default function OwnerDashboard() {
                       <th>Barbero</th>
                       <th>Servicio</th>
                       <th>Estado</th>
-                      <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {appointments.length === 0 ? (
-                      <tr><td colSpan={7} className="text-center text-muted">No hay citas para los filtros seleccionados.</td></tr>
+                      <tr><td colSpan={6} className="text-center text-muted">No hay citas para los filtros seleccionados.</td></tr>
                     ) : appointments.map((appointment) => {
                       const currentAppointmentId = appointmentId(appointment);
-                      const isUpdating = updatingAppointmentId === currentAppointmentId;
-                      const canConfirm = appointment.status !== 'confirmed' && appointment.status !== 'cancelled';
-                      const canCancel = appointment.status !== 'cancelled';
+                      const isSelected = selectedAppointmentManage && appointmentId(selectedAppointmentManage) === currentAppointmentId;
                       return (
-                        <tr key={currentAppointmentId}>
-                          <td>{formatDate(appointment.appointment_date)}</td>
-                          <td>{formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}</td>
-                          <td>{appointmentClientName(appointment)}</td>
-                          <td>{appointmentBarberName(appointment, barbers)}</td>
-                          <td>{appointmentServiceName(appointment)}</td>
+                        <tr 
+                          key={currentAppointmentId}
+                          className={`align-middle cursor-pointer ${isSelected ? 'table-activeselected' : ''}`}
+                          onClick={() => setSelectedAppointmentManage(appointment)}
+                          style={{ transition: 'background-color 0.2s' }}
+                        >
+                          <td className="text-white">{formatDate(appointment.appointment_date)}</td>
+                          <td className="text-muted">{formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}</td>
+                          <td className="text-white fw-bold">{appointmentClientName(appointment)}</td>
+                          <td className="text-muted">{appointmentBarberName(appointment, barbers)}</td>
+                          <td className="text-white">{appointmentServiceName(appointment)}</td>
                           <td><span className={appointmentStatusClass(appointment.status)}>{formatAppointmentStatus(appointment.status)}</span></td>
-                          <td>
-                            <div className="d-flex gap-2 flex-wrap">
-                              {canConfirm && (
-                                <button className="btn btn-outline-gold btn-sm" disabled={isUpdating} onClick={() => handleUpdateAppointmentStatus(appointment, 'confirmed')}>Confirmar</button>
-                              )}
-                              {canCancel && (
-                                <button className="btn btn-outline-danger btn-sm" disabled={isUpdating} onClick={() => handleUpdateAppointmentStatus(appointment, 'cancelled')}>Cancelar</button>
-                              )}
-                            </div>
-                          </td>
                         </tr>
                       );
                     })}

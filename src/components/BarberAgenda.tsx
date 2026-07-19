@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { request } from "../api/api";
 
 interface Appointment {
@@ -17,6 +17,7 @@ export default function BarberAgenda() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   
   const getTodayDateString = (): string => {
     const today = new Date();
@@ -27,6 +28,20 @@ export default function BarberAgenda() {
   };
 
   const [filterDate, setFilterDate] = useState<string>(getTodayDateString());
+
+  const touchTimerRef = useRef<any>(null);
+
+  const handleTouchStart = (appointment: Appointment) => {
+    touchTimerRef.current = setTimeout(() => {
+      setSelectedAppointment(appointment);
+    }, 700);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+    }
+  };
 
   const fetchAppointments = async () => {
     try {
@@ -39,6 +54,7 @@ export default function BarberAgenda() {
       setError("No se pudieron cargar las citas de la agenda.");
     } finally {
       setLoading(false);
+      setSelectedAppointment(null);
     }
   };
 
@@ -131,76 +147,121 @@ export default function BarberAgenda() {
             No tienes citas agendadas para el {filterDate}.
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="table table-dashboard table-hover mb-0">
-              <thead>
-                <tr>
-                  <th>Hora</th>
-                  <th>Cliente</th>
-                  <th>Notas / Comentarios</th>
-                  <th>Estado</th>
-                  <th className="text-end">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {appointments.map((appointment) => (
-                  <tr key={appointment.appointment_id} className="align-middle">
-                    <td className="fw-bold" style={{ color: "#fff" }}>
-                      {appointment.start_time ? appointment.start_time.substring(0, 5) : "--:--"} - {appointment.end_time ? appointment.end_time.substring(0, 5) : "--:--"}
-                    </td>
-                    <td>{appointment.client?.name || "Cliente"}</td>
-                    <td className="text-muted" style={{ maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {appointment.notes || "Sin especificaciones"}
-                    </td>
-                    <td>
-                      <span className={`badge px-3 py-2 text-uppercase`} style={{
-                        backgroundColor: 
-                          appointment.status === "pending" ? "#ffc10722" : 
-                          (appointment.status === "confirmed" || appointment.status === "accepted") ? "#19875422" : "#dc354522",
-                        color: 
-                          appointment.status === "pending" ? "#ffc107" : 
-                          (appointment.status === "confirmed" || appointment.status === "accepted") ? "#198754" : "#dc3545",
-                        border: `1px solid ${
-                          appointment.status === "pending" ? "#ffc107" : 
-                          (appointment.status === "confirmed" || appointment.status === "accepted") ? "#198754" : "#dc3545"
-                        }`
-                      }}>
-                        {appointment.status === "accepted" ? "confirmada" : appointment.status}
-                      </span>
-                    </td>
-                    <td className="text-end">
-                      {appointment.status === "pending" && (
-                        <div className="d-flex justify-content-end gap-2">
-                          <button
-                            onClick={() => handleUpdateStatus(appointment.appointment_id, "confirmed")}
-                            className="btn btn-sm btn-success px-3"
-                          >
-                            <i className="fa-solid fa-check me-1"></i> Aceptar
-                          </button>
-                          <button
-                            onClick={() => handleUpdateStatus(appointment.appointment_id, "cancelled")}
-                            className="btn btn-sm btn-outline-danger px-3"
-                          >
-                            <i className="fa-solid fa-xmark me-1"></i> Rechazar
-                          </button>
-                        </div>
-                      )}
-                      {(appointment.status === "confirmed" || appointment.status === "accepted") && (
-                        <button
-                          onClick={() => handleUpdateStatus(appointment.appointment_id, "cancelled")}
-                          className="btn btn-sm btn-outline-danger"
+          <div>
+            <div className="panel-card mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3" style={{ border: '1px solid var(--border-color)', backgroundColor: '#1c1c1a' }}>
+              <div className="d-flex align-items-center gap-2">
+                <i className="fa-solid fa-circle-info text-gold fs-5"></i>
+                {selectedAppointment ? (
+                  <div className="text-start">
+                    <span className="text-white fw-bold">Seleccionado:</span> <span className="text-gold fw-bold">{selectedAppointment.client?.name || "Cliente"}</span>
+                    <span className="text-muted ms-2">
+                      ({selectedAppointment.start_time?.substring(0, 5) || "--:--"} - {selectedAppointment.status})
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-muted italic">Selecciona una cita de la tabla para gestionarla.</span>
+                )}
+              </div>
+              <div className="d-flex gap-2">
+                {selectedAppointment && (
+                  <>
+                    {selectedAppointment.status === "pending" && (
+                      <>
+                        <button 
+                          type="button"
+                          onClick={() => handleUpdateStatus(selectedAppointment.appointment_id, "confirmed")} 
+                          className="btn btn-outline-gold fw-bold px-3 py-2"
                         >
-                          <i className="fa-solid fa-ban me-1"></i> Cancelar Cita
+                          <i className="fa-solid fa-check me-1"></i> Aceptar
                         </button>
-                      )}
-                      {(appointment.status === "cancelled" || appointment.status === "rejected") && (
-                        <span className="text-muted small">Finalizada</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <button 
+                          type="button"
+                          onClick={() => handleUpdateStatus(selectedAppointment.appointment_id, "cancelled")} 
+                          className="btn btn-outline-danger fw-bold px-3 py-2"
+                        >
+                          <i className="fa-solid fa-xmark me-1"></i> Rechazar
+                        </button>
+                      </>
+                    )}
+                    {(selectedAppointment.status === "confirmed" || selectedAppointment.status === "accepted") && (
+                      <button 
+                        type="button"
+                        onClick={() => handleUpdateStatus(selectedAppointment.appointment_id, "cancelled")} 
+                        className="btn btn-outline-danger fw-bold px-3 py-2"
+                      >
+                        <i className="fa-solid fa-ban me-1"></i> Cancelar Cita
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="panel-card mt-3">
+              <div className="table-responsive">
+                <table className="table table-dashboard table-hover mb-0">
+                  <thead>
+                    <tr>
+                      <th>Hora</th>
+                      <th>Cliente</th>
+                      <th>Notas / Comentarios</th>
+                      <th>Estado</th>
+                      <th className="text-end d-none d-md-table-cell" style={{ width: '60px' }}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {appointments.map((appointment) => {
+                      const isSelected = selectedAppointment?.appointment_id === appointment.appointment_id;
+                      return (
+                        <tr 
+                          key={appointment.appointment_id} 
+                          className={`align-middle cursor-pointer ${isSelected ? 'table-activeselected' : ''}`}
+                          onClick={() => setSelectedAppointment(appointment)}
+                          onTouchStart={() => handleTouchStart(appointment)}
+                          onTouchEnd={handleTouchEnd}
+                          onTouchCancel={handleTouchEnd}
+                          style={{ transition: 'background-color 0.2s' }}
+                        >
+                          <td className="fw-bold text-white">
+                            {appointment.start_time ? appointment.start_time.substring(0, 5) : "--:--"} - {appointment.end_time ? appointment.end_time.substring(0, 5) : "--:--"}
+                          </td>
+                          <td className="text-white">{appointment.client?.name || "Cliente"}</td>
+                          <td className="text-muted" style={{ maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {appointment.notes || "Sin especificaciones"}
+                          </td>
+                          <td>
+                            <span className={`badge px-3 py-2 text-uppercase`} style={{
+                              backgroundColor: 
+                                appointment.status === "pending" ? "#ffc10722" : 
+                                (appointment.status === "confirmed" || appointment.status === "accepted") ? "#19875422" : "#dc354522",
+                              color: 
+                                appointment.status === "pending" ? "#ffc107" : 
+                                (appointment.status === "confirmed" || appointment.status === "accepted") ? "#198754" : "#dc3545",
+                              border: `1px solid ${
+                                appointment.status === "pending" ? "#ffc107" : 
+                                (appointment.status === "confirmed" || appointment.status === "accepted") ? "#198754" : "#dc3545"
+                              }`
+                            }}>
+                              {appointment.status === "accepted" ? "confirmada" : appointment.status}
+                            </span>
+                          </td>
+                          <td className="text-end d-none d-md-table-cell">
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-link text-gold p-0"
+                              onClick={(e) => { e.stopPropagation(); setSelectedAppointmentManage(appointment); }}
+                              title="Acciones (PC)"
+                            >
+                              <i className="fa-solid fa-bars fs-5"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
       </div>

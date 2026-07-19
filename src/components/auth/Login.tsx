@@ -46,6 +46,7 @@ export default function Login() {
       localStorage.setItem('user_id', res.user.id);
       localStorage.setItem('user_name', res.user.name);
       localStorage.setItem('user_email', res.user.email);
+      localStorage.setItem('barbershop_id', res.user.barbershop_id || '');
       
       // Resolve user role from JWT token payload
       const decoded = parseJwt(res.token);
@@ -83,6 +84,7 @@ export default function Login() {
       localStorage.setItem('user_id', res.user.id);
       localStorage.setItem('user_name', res.user.name);
       localStorage.setItem('user_email', res.user.email);
+      localStorage.setItem('barbershop_id', res.user.barbershop_id || '');
 
       // Resolve user role from JWT token payload
       const decoded = parseJwt(res.token);
