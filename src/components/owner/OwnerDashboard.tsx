@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, CalendarDays, RefreshCw, Scissors, Ticket, Users } from 'lucide-react';
+import { AlertCircle, CalendarDays, RefreshCw, Scissors, Ticket, Users, PlusCircle, Building } from 'lucide-react';
 import { cachedRequest, clearApiCache, request } from '../../api/api';
 
-type OwnerTab = 'overview' | 'barbershop' | 'barbers' | 'appointments' | 'invitations';
+type OwnerTab = 'overview' | 'barbershop' | 'barbers' | 'appointments' | 'invitations' | 'branches';
 type EntityStatus = 'active' | 'inactive';
 type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | string;
 
@@ -28,6 +28,8 @@ interface Barbershop {
   address?: string;
   description?: string;
   logo_url?: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 interface BarberMember {
@@ -86,7 +88,43 @@ interface BarbershopFormState {
   address: string;
   description: string;
   logo_url: string;
+  latitude: number | '';
+  longitude: number | '';
 }
+
+interface NewBranchFormState {
+  name: string;
+  slug: string;
+  phone: string;
+  email: string;
+  address: string;
+  logo_url: string;
+  description: string;
+  latitude: number | '';
+  longitude: number | '';
+}
+
+const loadGoogleMapsScript = (callback: () => void) => {
+  if ((window as any).google && (window as any).google.maps) {
+    callback();
+    return;
+  }
+  const existingScript = document.getElementById('googleMapsScript');
+  if (existingScript) {
+    existingScript.addEventListener('load', callback);
+    return;
+  }
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+  const script = document.createElement('script');
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+  script.id = 'googleMapsScript';
+  script.async = true;
+  script.defer = true;
+  script.onload = () => {
+    if (callback) callback();
+  };
+  document.head.appendChild(script);
+};
 
 function unwrapData<T>(payload: T | ApiListResponse<T> | null | undefined, fallback: T): T {
   if (!payload) return fallback;
@@ -98,7 +136,10 @@ function unwrapData<T>(payload: T | ApiListResponse<T> | null | undefined, fallb
 }
 
 function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
+  const localDate = new Date();
+  const timezoneOffset = localDate.getTimezoneOffset() * 60 * 1000;
+  const adjustedDate = new Date(localDate.getTime() - timezoneOffset);
+  return adjustedDate.toISOString().split('T')[0];
 }
 
 function formatTime(value?: string): string {
@@ -196,10 +237,26 @@ export default function OwnerDashboard() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [barbershop, setBarbershop] = useState<Barbershop | null>(null);
+  const [barbershops, setBarbershops] = useState<Barbershop[]>([]);
   const [barbershopForm, setBarbershopForm] = useState<BarbershopFormState>(emptyBarbershopForm());
   const [barbers, setBarbers] = useState<BarberMember[]>([]);
   const [appointments, setAppointments] = useState<OwnerAppointment[]>([]);
   const [invitations, setInvitations] = useState<InvitationCode[]>([]);
+
+  const [newBranchForm, setNewBranchForm] = useState<NewBranchFormState>({
+    name: '',
+    slug: '',
+    phone: '',
+    email: '',
+    address: '',
+    logo_url: '',
+    description: '',
+    latitude: '',
+    longitude: '',
+  });
+
+  const autocompleteInputRef = useRef<HTMLInputElement | null>(null);
+  const createAutocompleteInputRef = useRef<HTMLInputElement | null>(null);
 
   // Selection states (for no-inline-actions)
   const [selectedBarberManage, setSelectedBarberManage] = useState<BarberMember | null>(null);
@@ -213,6 +270,7 @@ export default function OwnerDashboard() {
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [savingBarbershop, setSavingBarbershop] = useState(false);
+  const [creatingBranch, setCreatingBranch] = useState(false);
   const [addingBarber, setAddingBarber] = useState(false);
   const [creatingInvitation, setCreatingInvitation] = useState(false);
   const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
@@ -290,6 +348,63 @@ export default function OwnerDashboard() {
     return shop;
   };
 
+  const loadBarbershops = async () => {
+    try {
+      const payload = await request<Barbershop[]>("GET", "/api/owner/barbershops");
+      const list = unwrapData<Barbershop[]>(payload, []);
+      setBarbershops(list);
+      return list;
+    } catch {
+      return [];
+    }
+  };
+
+  const handleSwitchBarbershop = async (shopId: string) => {
+    localStorage.setItem("barbershop_id", shopId);
+    clearApiCache();
+    await reloadOwnerData();
+    showSuccess("Sucursal cambiada correctamente.");
+  };
+
+  const handleCreateBranch = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setCreatingBranch(true);
+    setError(null);
+    try {
+      const response = await request('POST', '/barbershops', {
+        name: newBranchForm.name,
+        slug: newBranchForm.slug,
+        phone: newBranchForm.phone || null,
+        email: newBranchForm.email || null,
+        address: newBranchForm.address || null,
+        logo_url: newBranchForm.logo_url || null,
+        description: newBranchForm.description || null,
+        latitude: newBranchForm.latitude !== '' ? newBranchForm.latitude : null,
+        longitude: newBranchForm.longitude !== '' ? newBranchForm.longitude : null,
+      });
+      showSuccess(`Sucursal "${newBranchForm.name}" creada exitosamente.`);
+      setNewBranchForm({
+        name: '',
+        slug: '',
+        phone: '',
+        email: '',
+        address: '',
+        logo_url: '',
+        description: '',
+        latitude: '',
+        longitude: '',
+      });
+      clearApiCache();
+      localStorage.setItem("barbershop_id", response.id);
+      setActiveTab('barbershop');
+      await reloadOwnerData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo crear la sucursal.');
+    } finally {
+      setCreatingBranch(false);
+    }
+  };
+
   const loadBarbers = async () => {
     const payload = await cachedRequest<BarberMember[] | ApiListResponse<BarberMember[]>>('/api/owner/barbers', 180000);
     setBarbers(unwrapData<BarberMember[]>(payload, []));
@@ -330,12 +445,25 @@ export default function OwnerDashboard() {
     setLoadingInitial(true);
     try {
       await loadProfile();
-      const shop = await loadBarbershop();
-      await Promise.all([
-        loadBarbers(),
-        loadAppointments(appointmentDate, appointmentBarberId),
-        loadInvitations(shop.id),
-      ]);
+      const list = await loadBarbershops();
+      
+      let activeId = localStorage.getItem("barbershop_id");
+      let activeShop = list.find(s => s.id === activeId);
+      if (!activeShop && list.length > 0) {
+        activeShop = list[0];
+        localStorage.setItem("barbershop_id", activeShop.id || '');
+      }
+      
+      setBarbershop(activeShop || null);
+      setBarbershopForm(mapBarbershopToForm(activeShop || null));
+      
+      if (activeShop) {
+        await Promise.all([
+          loadBarbers(),
+          loadAppointments(appointmentDate, appointmentBarberId),
+          loadInvitations(activeShop.id),
+        ]);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'No se pudo cargar el módulo del propietario.';
       setError(message);
@@ -347,6 +475,50 @@ export default function OwnerDashboard() {
   useEffect(() => {
     reloadOwnerData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'barbershop' || activeTab === 'branches') {
+      loadGoogleMapsScript(() => {
+        if (autocompleteInputRef.current) {
+          const autocomplete = new (window as any).google.maps.places.Autocomplete(autocompleteInputRef.current, {
+            types: ['geocode', 'establishment'],
+          });
+          autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (place.geometry && place.geometry.location) {
+              const lat = place.geometry.location.lat();
+              const lng = place.geometry.location.lng();
+              setBarbershopForm(prev => ({
+                ...prev,
+                address: place.formatted_address || prev.address,
+                latitude: lat,
+                longitude: lng
+              }));
+            }
+          });
+        }
+        
+        if (createAutocompleteInputRef.current) {
+          const autocomplete = new (window as any).google.maps.places.Autocomplete(createAutocompleteInputRef.current, {
+            types: ['geocode', 'establishment'],
+          });
+          autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (place.geometry && place.geometry.location) {
+              const lat = place.geometry.location.lat();
+              const lng = place.geometry.location.lng();
+              setNewBranchForm(prev => ({
+                ...prev,
+                address: place.formatted_address || prev.address,
+                latitude: lat,
+                longitude: lng
+              }));
+            }
+          });
+        }
+      });
+    }
+  }, [activeTab, barbershop]);
 
   const handleSaveBarbershop = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -360,6 +532,8 @@ export default function OwnerDashboard() {
         address: barbershopForm.address,
         description: barbershopForm.description,
         logo_url: barbershopForm.logo_url,
+        latitude: barbershopForm.latitude !== '' ? barbershopForm.latitude : null,
+        longitude: barbershopForm.longitude !== '' ? barbershopForm.longitude : null,
       });
       const updatedShop = unwrapData<Barbershop>(updated, barbershop || {});
       clearApiCache();
@@ -495,6 +669,9 @@ export default function OwnerDashboard() {
         <button className={`nav-link text-start bg-transparent border-0 w-100 ${activeTab === 'barbershop' ? 'active' : ''}`} onClick={() => changeTab('barbershop')}>
           <i className="fa-solid fa-store"></i> Barbería
         </button>
+        <button className={`nav-link text-start bg-transparent border-0 w-100 ${activeTab === 'branches' ? 'active' : ''}`} onClick={() => changeTab('branches')}>
+          <Building size={16} /> Sucursales
+        </button>
         <button className={`nav-link text-start bg-transparent border-0 w-100 ${activeTab === 'barbers' ? 'active' : ''}`} onClick={() => changeTab('barbers')}>
           <i className="fa-solid fa-users"></i> Equipo
         </button>
@@ -515,6 +692,21 @@ export default function OwnerDashboard() {
           <div>
             <h2>Espacio del propietario</h2>
             <p className="text-muted mb-0 text-start">Administra la información, el equipo de barberos, las invitaciones y la agenda general.</p>
+            {barbershops.length > 1 && (
+              <div className="d-flex align-items-center gap-2 mt-2">
+                <span className="text-muted text-xs text-uppercase font-heading" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Sucursal Activa:</span>
+                <select 
+                  className="form-select form-select-sm bg-black border-gold text-white text-xs py-1 px-3 rounded cursor-pointer border" 
+                  style={{ maxWidth: '250px', fontSize: '0.85rem', borderColor: '#D4AF37' }} 
+                  value={barbershop?.id || ''} 
+                  onChange={(e) => handleSwitchBarbershop(e.target.value)}
+                >
+                  {barbershops.map(s => (
+                    <option key={s.id} value={s.id} className="bg-black text-white">{s.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
           <div className="user-profile">
             <div className="text-end d-none d-sm-block">
@@ -622,8 +814,16 @@ export default function OwnerDashboard() {
                     <input className="form-control" value={barbershopForm.logo_url} onChange={(event) => setBarbershopForm({ ...barbershopForm, logo_url: event.target.value })} />
                   </div>
                   <div className="col-12">
-                    <label className="form-label">Ubicación / Dirección</label>
-                    <input className="form-control" value={barbershopForm.address} onChange={(event) => setBarbershopForm({ ...barbershopForm, address: event.target.value })} />
+                    <label className="form-label">Ubicación / Dirección (Autocompletado con Google Maps)</label>
+                    <input ref={autocompleteInputRef} className="form-control" value={barbershopForm.address} onChange={(event) => setBarbershopForm({ ...barbershopForm, address: event.target.value })} placeholder="Escribe para buscar una ubicación..." />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Latitud</label>
+                    <input className="form-control" value={barbershopForm.latitude} readOnly disabled />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Longitud</label>
+                    <input className="form-control" value={barbershopForm.longitude} readOnly disabled />
                   </div>
                   <div className="col-12">
                     <label className="form-label">Descripción</label>
@@ -636,6 +836,97 @@ export default function OwnerDashboard() {
                   </div>
                 </div>
               </form>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'branches' && (
+          <section className="content-section active text-start">
+            <h4 className="section-title">Sucursales (Barberías)</h4>
+            
+            <div className="panel-card mb-4 dashboard-form">
+              <h5 className="text-white mb-4">Registrar Nueva Sucursal</h5>
+              <form onSubmit={handleCreateBranch}>
+                <div className="row g-4">
+                  <div className="col-md-6">
+                    <label className="form-label">Nombre de la sucursal *</label>
+                    <input className="form-control" value={newBranchForm.name} onChange={(e) => setNewBranchForm({ ...newBranchForm, name: e.target.value })} required placeholder="Ej: PANDA Black & White Norte" />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Slug de URL (único) *</label>
+                    <input className="form-control" value={newBranchForm.slug} onChange={(e) => setNewBranchForm({ ...newBranchForm, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })} required placeholder="Ej: panda-norte" />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Número de teléfono</label>
+                    <input className="form-control" value={newBranchForm.phone} onChange={(e) => setNewBranchForm({ ...newBranchForm, phone: e.target.value })} placeholder="Ej: 0999999999" />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Correo electrónico</label>
+                    <input type="email" className="form-control" value={newBranchForm.email} onChange={(e) => setNewBranchForm({ ...newBranchForm, email: e.target.value })} placeholder="Ej: contacto@norte.com" />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Dirección (Autocompletado con Google Maps)</label>
+                    <input ref={createAutocompleteInputRef} className="form-control" value={newBranchForm.address} onChange={(e) => setNewBranchForm({ ...newBranchForm, address: e.target.value })} placeholder="Escribe para buscar ubicación..." />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Latitud</label>
+                    <input className="form-control" value={newBranchForm.latitude} readOnly disabled />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Longitud</label>
+                    <input className="form-control" value={newBranchForm.longitude} readOnly disabled />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label">URL del logo</label>
+                    <input className="form-control" value={newBranchForm.logo_url} onChange={(e) => setNewBranchForm({ ...newBranchForm, logo_url: e.target.value })} placeholder="https://..." />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Descripción</label>
+                    <textarea className="form-control" rows={3} value={newBranchForm.description} onChange={(e) => setNewBranchForm({ ...newBranchForm, description: e.target.value })} placeholder="Breve descripción de la sucursal..."></textarea>
+                  </div>
+                  <div className="col-12 text-end mt-4">
+                    <button type="submit" className="btn btn-gold" disabled={creatingBranch}>
+                      {creatingBranch ? 'Creando...' : 'Crear Sucursal'}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div className="panel-card">
+              <h5 className="text-white mb-4">Lista de tus Sucursales</h5>
+              {barbershops.length === 0 ? (
+                <p className="text-muted">No tienes sucursales registradas.</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-dark table-hover mb-0">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Slug</th>
+                        <th>Dirección</th>
+                        <th>Teléfono</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {barbershops.map((shop) => (
+                        <tr key={shop.id}>
+                          <td>{shop.name}</td>
+                          <td><code>{shop.slug}</code></td>
+                          <td>{shop.address || 'N/A'}</td>
+                          <td>{shop.phone || 'N/A'}</td>
+                          <td>
+                            <button className={`btn btn-sm ${barbershop?.id === shop.id ? 'btn-gold' : 'btn-outline-gold'}`} onClick={() => shop.id && handleSwitchBarbershop(shop.id)}>
+                              {barbershop?.id === shop.id ? 'Gestionando' : 'Gestionar'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </section>
         )}

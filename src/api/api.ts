@@ -27,8 +27,10 @@ export async function request<T = any>(
   const token = localStorage.getItem("token");
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   
+  const activeShopId = localStorage.getItem("barbershop_id");
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    ...(activeShopId ? { "X-Barbershop-Id": activeShopId } : {}),
     ...customHeaders,
   };
 
