@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, CalendarDays, RefreshCw, Scissors, Ticket, Users, PlusCircle, Building } from 'lucide-react';
+import { AlertCircle, CalendarDays, RefreshCw, Scissors, Ticket, Users, Building } from 'lucide-react';
 import { cachedRequest, clearApiCache, request } from '../../api/api';
 
 type OwnerTab = 'overview' | 'barbershop' | 'barbers' | 'appointments' | 'invitations' | 'branches';
@@ -23,6 +23,7 @@ interface UserProfile {
 interface Barbershop {
   id?: string;
   name?: string;
+  slug?: string;
   phone?: string;
   email?: string;
   address?: string;
@@ -216,6 +217,8 @@ function emptyBarbershopForm(): BarbershopFormState {
     address: '',
     description: '',
     logo_url: '',
+    latitude: '',
+    longitude: '',
   };
 }
 
@@ -227,6 +230,8 @@ function mapBarbershopToForm(barbershop: Barbershop | null): BarbershopFormState
     address: barbershop?.address || '',
     description: barbershop?.description || '',
     logo_url: barbershop?.logo_url || '',
+    latitude: barbershop?.latitude ?? '',
+    longitude: barbershop?.longitude ?? '',
   };
 }
 
@@ -340,13 +345,6 @@ export default function OwnerDashboard() {
     }
   };
 
-  const loadBarbershop = async () => {
-    const payload = await cachedRequest<Barbershop | ApiListResponse<Barbershop>>('/api/owner/barbershop', 300000);
-    const shop = unwrapData<Barbershop>(payload, {});
-    setBarbershop(shop);
-    setBarbershopForm(mapBarbershopToForm(shop));
-    return shop;
-  };
 
   const loadBarbershops = async () => {
     try {

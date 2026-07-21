@@ -249,7 +249,7 @@ export default function BarberAgenda() {
                             <button
                               type="button"
                               className="btn btn-sm btn-link text-gold p-0"
-                              onClick={(e) => { e.stopPropagation(); setSelectedAppointmentManage(appointment); }}
+                              onClick={(e) => { e.stopPropagation(); setSelectedAppointment(appointment); }}
                               title="Acciones (PC)"
                             >
                               <i className="fa-solid fa-bars fs-5"></i>
