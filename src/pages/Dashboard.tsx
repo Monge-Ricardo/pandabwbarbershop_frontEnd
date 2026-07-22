@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader, AlertCircle, RefreshCw } from 'lucide-react';
-import { cachedRequest, clearApiCache, request } from '../api/api';
+import { CACHE_TTL, cachedRequest, clearApiCache, request } from '../api/api';
 import BookingWizard from '../components/customer/BookingWizard';
 
 interface Appointment {
@@ -62,7 +62,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const profile = await cachedRequest<UserProfile>('/users/me', 120000);
+        const profile = await cachedRequest<UserProfile>('/users/me', CACHE_TTL.PROFILE);
         setUserProfile(profile);
         setFullName(profile.full_name || '');
         setPhone(profile.phone || '');
@@ -84,39 +84,54 @@ export default function Dashboard() {
   }, []);
 
   // Load appointments
-  const fetchAppointments = async () => {
+  const fetchAppointments = async (forceRefresh = false) => {
     if (!userProfile) return;
+
     setLoadingAppointments(true);
     setError(null);
+
     try {
-      // 1. Fetch raw appointments
-      const rawApps = await request<Appointment[]>("GET", '/appointments');
-      
-      // 2. Fetch master data to resolve names
-      const barbersRes = await cachedRequest<{ data: any[] }>('/api/customer/barbers', 300000).catch(() => ({ data: [] }));
-      const barbersMap = new Map(barbersRes.data.map(b => [b.id, b.full_name]));
-      
-      // 3. Resolve each appointment details (linked services)
+      const [rawApps, barbersRes] = await Promise.all([
+        cachedRequest<Appointment[]>('/appointments', CACHE_TTL.APPOINTMENTS, forceRefresh),
+        cachedRequest<{ data: Array<{ id: string; full_name: string }> }>(
+          '/api/customer/barbers',
+          CACHE_TTL.CATALOG,
+        ).catch(() => ({ data: [] })),
+      ]);
+
+      const barbersMap = new Map(
+        barbersRes.data.map((barber) => [barber.id, barber.full_name]),
+      );
+
       const resolvedList: ResolvedAppointment[] = await Promise.all(
         rawApps.map(async (app) => {
-          let service_name = 'Servicio';
+          let serviceName = 'Servicio';
+
           try {
-            const services = await request<any[]>("GET", `/appointments/${app.appointment_id}/services`);
-            if (services && services.length > 0) {
-              service_name = services[0].name || services[0].service?.name || 'Servicio';
+            const services = await cachedRequest<any[]>(
+              `/appointments/${app.appointment_id}/services`,
+              CACHE_TTL.APPOINTMENT_SERVICES,
+              forceRefresh,
+            );
+
+            if (services.length > 0) {
+              serviceName = services[0].name || services[0].service?.name || 'Servicio';
             }
-          } catch (e) {
-            console.error(`Failed to load services for appointment ${app.appointment_id}:`, e);
+          } catch (serviceError) {
+            console.error(
+              `Failed to load services for appointment ${app.appointment_id}:`,
+              serviceError,
+            );
           }
+
           return {
             ...app,
             barber_name: barbersMap.get(app.barber_id) || 'Barbero',
-            service_name
+            service_name: serviceName,
           };
-        })
+        }),
       );
-      
-      // Sort: active/pending first, then date descending
+
       resolvedList.sort((a, b) => {
         if (a.status === 'cancelled' && b.status !== 'cancelled') return 1;
         if (a.status !== 'cancelled' && b.status === 'cancelled') return -1;
@@ -148,8 +163,7 @@ export default function Dashboard() {
     
     try {
       await request('DELETE', `/appointments/${appId}`);
-      clearApiCache();
-      await fetchAppointments();
+      await fetchAppointments(true);
     } catch (err: any) {
       setError(err.message || 'Error al cancelar la cita.');
     } finally {
@@ -172,7 +186,6 @@ export default function Dashboard() {
       });
       setUserProfile(updated);
       localStorage.setItem('user_name', updated.full_name);
-      clearApiCache();
       setProfileSuccess(true);
       setTimeout(() => setProfileSuccess(false), 3000);
     } catch (err: any) {
@@ -188,6 +201,8 @@ export default function Dashboard() {
     localStorage.removeItem('user_name');
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_id');
+    localStorage.removeItem('barbershop_id');
+    localStorage.removeItem('session_created_at');
     clearApiCache();
     navigate('/');
   };
@@ -318,7 +333,7 @@ export default function Dashboard() {
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h3 className="section-title mb-0">Citas Próximas</h3>
               <button
-                onClick={fetchAppointments}
+                onClick={() => fetchAppointments(true)}
                 className="btn btn-outline-secondary text-white btn-sm"
                 title="Recargar citas"
                 disabled={loadingAppointments}
@@ -446,7 +461,7 @@ export default function Dashboard() {
       </main>
 
       {showInvitationPrompt && (
-        <div className="modal-backdrop show" style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 1050 }}>
+        <div style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 1050 }}>
           <div className="panel-card p-5 text-center" style={{ maxWidth: '500px', width: '90%', border: '1px solid var(--primary-gold)' }}>
             <i className="fa-solid fa-scissors mb-3 text-gold" style={{ fontSize: '3rem' }}></i>
             <h3 className="font-heading text-white mb-2" style={{ letterSpacing: '1px' }}>¿ERES BARBERO EN SHARKHUB?</h3>

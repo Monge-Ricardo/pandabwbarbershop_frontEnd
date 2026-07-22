@@ -35,7 +35,6 @@ export default function Login() {
     setLoading(true);
 
     try {
-      clearApiCache();
       const res = await request('POST', '/auth/login', {
         email,
         password,
@@ -48,6 +47,10 @@ export default function Login() {
       localStorage.setItem('user_email', res.user.email);
       localStorage.setItem('barbershop_id', res.user.barbershop_id || '');
       localStorage.setItem('session_created_at', Date.now().toString());
+
+      // Limpia únicamente caché privada de sesiones anteriores.
+      // La caché pública de la página principal se conserva.
+      clearApiCache();
       
       // Resolve user role from JWT token payload
       const decoded = parseJwt(res.token);
@@ -63,8 +66,17 @@ export default function Login() {
       } else {
         navigate('/customer/dashboard'); // default
       }
-    } catch (err: any) {
-      setError(err.message || 'Credenciales inválidas. Por favor intente de nuevo.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '';
+      const isConnectionError =
+        message.toLowerCase().includes('failed to fetch') ||
+        message.toLowerCase().includes('networkerror');
+
+      setError(
+        isConnectionError
+          ? 'No fue posible conectar con el servidor. Inténtalo nuevamente.'
+          : 'Correo electrónico y/o contraseña incorrectos.',
+      );
     } finally {
       setLoading(false);
     }
@@ -76,7 +88,6 @@ export default function Login() {
     const idToken = credentialResponse.credential;
 
     try {
-      clearApiCache();
       const res = await request('POST', '/auth/google', {
         id_token: idToken,
       });
@@ -87,6 +98,10 @@ export default function Login() {
       localStorage.setItem('user_email', res.user.email);
       localStorage.setItem('barbershop_id', res.user.barbershop_id || '');
       localStorage.setItem('session_created_at', Date.now().toString());
+
+      // Limpia únicamente caché privada de sesiones anteriores.
+      // La caché pública de la página principal se conserva.
+      clearApiCache();
 
       // Resolve user role from JWT token payload
       const decoded = parseJwt(res.token);
@@ -102,8 +117,9 @@ export default function Login() {
       } else {
         navigate('/customer/dashboard');
       }
-    } catch (err: any) {
-      setError(err.message || 'Error de autenticación con Google.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '';
+      setError(message || 'Error de autenticación con Google.');
     } finally {
       setLoading(false);
     }
@@ -192,7 +208,10 @@ export default function Login() {
                       type="email"
                       required
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (error) setError(null);
+                      }}
                       className="form-control form-control-custom ps-5"
                       placeholder="ejemplo@correo.com"
                       disabled={loading}
@@ -211,7 +230,10 @@ export default function Login() {
                       type="password"
                       required
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (error) setError(null);
+                      }}
                       className="form-control form-control-custom ps-5"
                       placeholder="••••••••"
                       disabled={loading}
