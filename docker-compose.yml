@@ -4,10 +4,29 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-https://pandabarbershop.com}
-        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+        VITE_API_URL: ${VITE_API_URL:-https://apipandabw.duckdns.org}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-887099851419-cujv09lk7s33hjj8hhgu5uf0i2qjjmk0.apps.googleusercontent.com}
     image: sharkhub-modules-unificated:latest
     container_name: sharkhub_modules_unificated_web
     restart: unless-stopped
+    # Exponer a Caddy internamente, no en el host
+    expose:
+      - "80"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy_frontend
+    restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - sharkhub-modules-unificated
+
+volumes:
+  caddy_data:
+  caddy_config:
