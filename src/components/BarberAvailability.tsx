@@ -9,7 +9,7 @@ const DAYS_OF_WEEK = [
   { label: "Jueves", dayNum: 4 },
   { label: "Viernes", dayNum: 5 },
   { label: "Sábado", dayNum: 6 },
-  { label: "Domingo", dayNum: 7 },
+  { label: "Domingo", dayNum: 0 },
 ];
 
 interface DaySchedule {
