@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader, AlertCircle } from 'lucide-react';
+import { Loader, AlertCircle, LayoutGrid, List } from 'lucide-react';
 import { CACHE_TTL, cachedRequest, request } from '../../api/api';
 
 interface Barber {
@@ -21,8 +21,15 @@ interface BookingWizardProps {
   onSuccess: () => void;
 }
 
+type BarberViewMode = 'grid' | 'list';
+
 export default function BookingWizard({ onSuccess }: BookingWizardProps) {
   const [step, setStep] = useState(1);
+  const [barberViewMode, setBarberViewMode] = useState<BarberViewMode>(() => {
+    return localStorage.getItem('customer_barber_view_mode') === 'list'
+      ? 'list'
+      : 'grid';
+  });
   
   // Lists
   const [barbers, setBarbers] = useState<Barber[]>([]);
@@ -249,7 +256,39 @@ export default function BookingWizard({ onSuccess }: BookingWizardProps) {
       {/* Step 1: Select Barber */}
       {step === 1 && (
         <div className="wizard-panel active">
-          <h4 className="wizard-step-title mb-4 text-start text-white">Elige tu Barbero</h4>
+          <div className="barber-view-header">
+            <h4 className="wizard-step-title text-start text-white mb-0">Elige tu Barbero</h4>
+
+            <div className="barber-view-toggle" role="group" aria-label="Cambiar vista de barberos">
+              <button
+                type="button"
+                className={`barber-view-button ${barberViewMode === 'grid' ? 'active' : ''}`}
+                aria-pressed={barberViewMode === 'grid'}
+                title="Vista de tarjetas"
+                onClick={() => {
+                  setBarberViewMode('grid');
+                  localStorage.setItem('customer_barber_view_mode', 'grid');
+                }}
+              >
+                <LayoutGrid size={18} />
+                <span>Tarjetas</span>
+              </button>
+
+              <button
+                type="button"
+                className={`barber-view-button ${barberViewMode === 'list' ? 'active' : ''}`}
+                aria-pressed={barberViewMode === 'list'}
+                title="Vista de lista"
+                onClick={() => {
+                  setBarberViewMode('list');
+                  localStorage.setItem('customer_barber_view_mode', 'list');
+                }}
+              >
+                <List size={18} />
+                <span>Lista</span>
+              </button>
+            </div>
+          </div>
           
           {loadingBarbers ? (
             <div className="text-center py-5">
@@ -257,23 +296,33 @@ export default function BookingWizard({ onSuccess }: BookingWizardProps) {
               <p className="text-muted mt-2">Cargando barberos...</p>
             </div>
           ) : (
-            <div className="selection-grid">
+            <div className={`selection-grid barber-selection-grid ${barberViewMode === 'list' ? 'list-view' : 'card-view'}`}>
               {barbers.map((barber) => {
                 const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(barber.full_name)}&background=222&color=D4AF37&size=100`;
                 return (
                   <div
                     key={`${barber.barbershop_id}-${barber.id}`}
-                    className={`selection-card ${
+                    className={`selection-card barber-selection-card ${
                       selectedBarber?.id === barber.id &&
                       selectedBarber?.barbershop_id === barber.barbershop_id
                         ? 'selected'
                         : ''
                     }`}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setSelectedBarber(barber)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setSelectedBarber(barber);
+                      }
+                    }}
                   >
                     <img src={avatar} alt={barber.full_name} />
-                    <h5 className="selection-title">{barber.full_name}</h5>
-                    <p className="selection-subtitle">{barber.barbershop_name}</p>
+                    <div className="barber-selection-info">
+                      <h5 className="selection-title">{barber.full_name}</h5>
+                      <p className="selection-subtitle">{barber.barbershop_name}</p>
+                    </div>
                   </div>
                 );
               })}

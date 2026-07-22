@@ -363,3 +363,101 @@
     background-color: rgba(212, 175, 55, 0.12) !important;
     border-left: 3px solid var(--primary-gold) !important;
 }
+
+/* ---------- Barber View Switcher ---------- */
+.barber-view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 1.5rem;
+}
+
+.barber-view-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-base);
+}
+
+.barber-view-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.barber-view-button:hover {
+    color: var(--primary-gold);
+}
+
+.barber-view-button.active {
+    background: var(--primary-gold);
+    color: #111111;
+}
+
+.barber-selection-grid.list-view {
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.barber-selection-grid.list-view .barber-selection-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 88px;
+    padding: 14px 18px;
+    text-align: left;
+}
+
+.barber-selection-grid.list-view .barber-selection-card:hover {
+    transform: translateX(4px);
+}
+
+.barber-selection-grid.list-view .barber-selection-card img {
+    flex: 0 0 auto;
+    width: 58px;
+    height: 58px;
+    margin: 0;
+}
+
+.barber-selection-grid.list-view .barber-selection-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.barber-selection-grid.list-view .selection-title,
+.barber-selection-grid.list-view .selection-subtitle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    .barber-view-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .barber-view-toggle {
+        align-self: stretch;
+    }
+
+    .barber-view-button {
+        flex: 1;
+    }
+}
