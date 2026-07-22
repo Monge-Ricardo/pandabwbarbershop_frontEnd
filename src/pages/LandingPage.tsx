@@ -311,6 +311,11 @@ export default function LandingPage() {
     );
   }
 
+  const mainShop = barbershops[0];
+  const shopAddress = mainShop?.address || 'Calle Inés Gangotena con Av. Atahualpa, Quito';
+  const shopPhone = mainShop?.phone || '+593 99 999 9999';
+  const shopEmail = mainShop?.email || 'info@barberiapanda.com';
+
   const serviceImages = [
     '/img/haircut.png',
     '/img/beard-trim.png',
@@ -561,17 +566,17 @@ export default function LandingPage() {
               <div className="bg-secondary p-4 text-center d-flex flex-column align-items-center justify-content-center" style={{ flex: 1 }}>
                 <i className="fa-solid fa-map-pin text-primary mb-3" style={{ fontSize: '2rem' }}></i>
                 <h5 className="text-white text-uppercase">Ubicaciones</h5>
-                <p className="text-muted mb-0">Encuentra tu sucursal más cercana en el mapa</p>
+                <p className="text-muted mb-0">{shopAddress}</p>
               </div>
               <div className="bg-secondary p-4 text-center d-flex flex-column align-items-center justify-content-center" style={{ flex: 1 }}>
                 <i className="fa-solid fa-phone text-primary mb-3" style={{ fontSize: '2rem' }}></i>
                 <h5 className="text-white text-uppercase">Llámanos</h5>
-                <p className="text-muted mb-0">+593 99 999 9999</p>
+                <p className="text-muted mb-0">{shopPhone}</p>
               </div>
               <div className="bg-secondary p-4 text-center d-flex flex-column align-items-center justify-content-center" style={{ flex: 1 }}>
                 <i className="fa-solid fa-envelope text-primary mb-3" style={{ fontSize: '2rem' }}></i>
                 <h5 className="text-white text-uppercase">Escríbenos</h5>
-                <p className="text-muted mb-0">info@barberiapanda.com</p>
+                <p className="text-muted mb-0">{shopEmail}</p>
               </div>
             </div>
             
