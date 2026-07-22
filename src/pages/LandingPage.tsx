@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader } from 'lucide-react';
-import { request, cachedRequest, getCachedData, setCachedData } from '../api/api';
+import {
+  CACHE_TTL,
+  cachedPublicRequest,
+  getPublicCachedRequestData,
+} from '../api/api';
 
 interface Service {
   service_id: string;
@@ -15,6 +19,7 @@ interface Barber {
   id: string;
   full_name: string;
   barbershop_name: string;
+  barbershop_id?: string;
 }
 
 interface Barbershop {
@@ -50,10 +55,42 @@ const loadGoogleMapsScript = (callback: () => void) => {
 };
 
 export default function LandingPage() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [barbershops, setBarbershops] = useState<Barbershop[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialPublicCache] = useState(() => {
+    const cachedServices = getPublicCachedRequestData<Service[]>(
+      '/api/customer/services',
+      CACHE_TTL.LANDING_PUBLIC,
+    );
+    const cachedBarbers = getPublicCachedRequestData<{ data: Barber[] }>(
+      '/api/customer/barbers',
+      CACHE_TTL.LANDING_PUBLIC,
+    );
+    const cachedBarbershops = getPublicCachedRequestData<Barbershop[]>(
+      '/barbershops',
+      CACHE_TTL.LANDING_PUBLIC,
+    );
+
+    return {
+      services: cachedServices,
+      barbers: cachedBarbers?.data ?? null,
+      barbershops: cachedBarbershops,
+    };
+  });
+
+  const hasCompletePublicCache =
+    initialPublicCache.services !== null &&
+    initialPublicCache.barbers !== null &&
+    initialPublicCache.barbershops !== null;
+
+  const [services, setServices] = useState<Service[]>(
+    initialPublicCache.services ?? [],
+  );
+  const [barbers, setBarbers] = useState<Barber[]>(
+    initialPublicCache.barbers ?? [],
+  );
+  const [barbershops, setBarbershops] = useState<Barbershop[]>(
+    initialPublicCache.barbershops ?? [],
+  );
+  const [loading, setLoading] = useState(!hasCompletePublicCache);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const carouselSlides = [
@@ -81,70 +118,72 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
-    // 1. Intentar cargar desde la caché del navegador inmediatamente (Stale-While-Revalidate)
-    const cachedServices = getCachedData<Service[]>('services_catalog', 300000); // 5 minutos de validez
-    const cachedBarbers = getCachedData<Barber[]>('barbers_list', 300000);
+    async function loadData() {
+      const fallbackServices: Service[] = [
+        { service_id: '1', name: 'Corte de Cabello Premium', price: 10.00, duration_minutes: 30, description: 'Estilo clásico o moderno adaptado a tus facciones.' },
+        { service_id: '2', name: 'Arreglo de Barba Tradicional', price: 7.00, duration_minutes: 20, description: 'Modelado, toalla caliente y loción hidratante.' },
+        { service_id: '3', name: 'Diseño y Arreglo de Cejas', price: 4.00, duration_minutes: 15, description: 'Perfilado profesional para complementar tu mirada.' },
+        { service_id: '4', name: 'Combo Panda Completo', price: 18.00, duration_minutes: 50, description: 'Corte premium + arreglo de barba + cejas de cortesía.' }
+      ];
 
-    if (cachedServices && cachedBarbers) {
-      setServices(cachedServices);
-      setBarbers(cachedBarbers);
+      const fallbackBarbers: Barber[] = [
+        { id: 'b1', full_name: 'Gabriel Molina', barbershop_name: 'PANDA Black & White Central' },
+        { id: 'b2', full_name: 'Alejandro Obando', barbershop_name: 'PANDA Black & White Central' },
+        { id: 'b3', full_name: 'Ricardo Monge', barbershop_name: 'PANDA Black & White Central' }
+      ];
+
+      const fallbackBarbershops: Barbershop[] = [
+        {
+          id: 'shop1',
+          name: 'PANDA Black & White Central',
+          address: 'Calle Inés Gangotena con Av. Atahualpa, Quito',
+          phone: '+593 99 999 9999',
+          email: 'info@barberiapanda.com',
+          latitude: -0.180653,
+          longitude: -78.467834
+        }
+      ];
+
+      const [servicesResult, barbersResult, shopsResult] = await Promise.allSettled([
+        cachedPublicRequest<Service[]>(
+          '/api/customer/services',
+          CACHE_TTL.LANDING_PUBLIC,
+        ),
+        cachedPublicRequest<{ data: Barber[] }>(
+          '/api/customer/barbers',
+          CACHE_TTL.LANDING_PUBLIC,
+        ),
+        cachedPublicRequest<Barbershop[]>(
+          '/barbershops',
+          CACHE_TTL.LANDING_PUBLIC,
+        ),
+      ]);
+
+      if (servicesResult.status === 'fulfilled') {
+        setServices(servicesResult.value || []);
+      } else {
+        console.error('Error loading services, using fallbacks:', servicesResult.reason);
+        setServices(fallbackServices);
+      }
+
+      if (barbersResult.status === 'fulfilled') {
+        setBarbers(barbersResult.value.data || []);
+      } else {
+        console.error('Error loading barbers, using fallbacks:', barbersResult.reason);
+        setBarbers(fallbackBarbers);
+      }
+
+      if (shopsResult.status === 'fulfilled') {
+        setBarbershops(shopsResult.value || []);
+      } else {
+        console.error('Error loading barbershops, using fallbacks:', shopsResult.reason);
+        setBarbershops(fallbackBarbershops);
+      }
+
       setLoading(false);
     }
 
-    async function loadData() {
-      try {
-        const servicesData = await request<Service[]>('GET', '/api/customer/services');
-        const freshServices = servicesData || [];
-        setServices(freshServices);
-      } catch (error) {
-        console.error('Error loading services, using fallbacks:', error);
-        const fallbackServices = [
-          { service_id: '1', name: 'Corte de Cabello Premium', price: 10.00, duration_minutes: 30, description: 'Estilo clásico o moderno adaptado a tus facciones.' },
-          { service_id: '2', name: 'Arreglo de Barba Tradicional', price: 7.00, duration_minutes: 20, description: 'Modelado, toalla caliente y loción hidratante.' },
-          { service_id: '3', name: 'Diseño y Arreglo de Cejas', price: 4.00, duration_minutes: 15, description: 'Perfilado profesional para complementar tu mirada.' },
-          { service_id: '4', name: 'Combo Panda Completo', price: 18.00, duration_minutes: 50, description: 'Corte premium + arreglo de barba + cejas de cortesía.' }
-        ];
-        setServices(fallbackServices);
-        setCachedData('services_catalog', fallbackServices);
-      }
-
-      try {
-        const barbersData = await cachedRequest<{ data: Barber[] }>('/api/customer/barbers', 300000);
-        const freshBarbers = barbersData.data || [];
-        setBarbers(freshBarbers);
-        setCachedData('barbers_list', freshBarbers);
-      } catch (error) {
-        console.error('Error loading barbers, using fallbacks:', error);
-        const fallbackBarbers = [
-          { id: 'b1', full_name: 'Gabriel Molina', barbershop_name: 'PANDA Black & White Central' },
-          { id: 'b2', full_name: 'Alejandro Obando', barbershop_name: 'PANDA Black & White Central' },
-          { id: 'b3', full_name: 'Ricardo Monge', barbershop_name: 'PANDA Black & White Central' }
-        ];
-        setBarbers(fallbackBarbers);
-        setCachedData('barbers_list', fallbackBarbers);
-      }
-
-      try {
-        const shopsData = await request<Barbershop[]>('GET', '/barbershops');
-        setBarbershops(shopsData || []);
-      } catch (error) {
-        console.error('Error loading barbershops, using fallbacks:', error);
-        setBarbershops([
-          {
-            id: 'shop1',
-            name: 'PANDA Black & White Central',
-            address: 'Calle Inés Gangotena con Av. Atahualpa, Quito',
-            phone: '+593 99 999 9999',
-            email: 'info@barberiapanda.com',
-            latitude: -0.180653,
-            longitude: -78.467834
-          }
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
+    void loadData();
   }, []);
 
   useEffect(() => {
@@ -449,7 +488,7 @@ export default function LandingPage() {
           
           <div className="row g-4">
             {barbers.map((barber, index) => (
-              <div key={barber.id} className="col-lg-4 col-md-6">
+              <div key={`${barber.barbershop_id || barber.barbershop_name}-${barber.id}`} className="col-lg-4 col-md-6">
                 <div className="team-item">
                   <div className="team-img position-relative overflow-hidden">
                     <img className="img-fluid w-100" src={`/img/team-${(index % 4) + 1}.jpg`} alt={barber.full_name} style={{ objectFit: 'cover', height: '350px' }} />
